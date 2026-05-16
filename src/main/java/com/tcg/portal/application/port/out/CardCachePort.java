@@ -6,5 +6,6 @@ import java.util.Optional;
 
 public interface CardCachePort {
     Optional<Card> findById(String scryfallId);
+    Optional<Card> findByName(String name);
     Card save(Card card);
 }

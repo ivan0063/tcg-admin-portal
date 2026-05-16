@@ -427,6 +427,97 @@ body {
 }
 .tcg-textarea:focus { outline: none; border-color: var(--primary); }
 
+/* ===== IMPORT UI ===== */
+.import-details {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.import-summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--text);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+}
+.import-summary::-webkit-details-marker { display: none; }
+.import-summary::before {
+    content: "▶";
+    font-size: .65rem;
+    color: var(--text-dim);
+    transition: transform .2s;
+}
+details[open] > .import-summary::before { transform: rotate(90deg); }
+
+.import-format-hint {
+    font-size: .82rem;
+    color: var(--text-muted);
+    margin: 0 0 .5rem;
+}
+
+.import-example {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .65rem .85rem;
+    font-size: .78rem;
+    color: var(--text-muted);
+    font-family: monospace;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.import-textarea {
+    min-height: 140px;
+    font-family: monospace;
+    font-size: .85rem;
+}
+
+/* ===== IMPORT FAILURE BANNER ===== */
+.import-failure-banner {
+    background: #431407;
+    border: 1px solid #f9731644;
+    border-radius: 10px;
+    padding: .85rem 1.1rem;
+    margin-bottom: 1.25rem;
+    color: #fdba74;
+}
+
+.import-failure-banner > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: .9rem;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+}
+.import-failure-banner > summary::-webkit-details-marker { display: none; }
+.import-failure-banner > summary::after {
+    content: "▼ see list";
+    font-size: .75rem;
+    color: #fb923c;
+    font-weight: 400;
+    margin-left: auto;
+}
+details[open].import-failure-banner > summary::after { content: "▲ hide list"; }
+
+.failed-cards-list {
+    margin: .75rem 0 0 1.25rem;
+    padding: 0;
+    font-size: .85rem;
+    color: #fca5a5;
+    line-height: 1.8;
+}
+
 /* ===== ALERTS ===== */
 .alert-success {
     background: #14532d33;

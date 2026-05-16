@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface CardSearchPort {
     List<Card> searchCards(String query);
     Optional<Card> findById(String scryfallId);
+    /** Exact name lookup, falls back to fuzzy if no exact match. */
+    Optional<Card> findByName(String name);
 }

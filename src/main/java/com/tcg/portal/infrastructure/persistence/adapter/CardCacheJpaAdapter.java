@@ -24,6 +24,11 @@ public class CardCacheJpaAdapter implements CardCachePort {
     }
 
     @Override
+    public Optional<Card> findByName(String name) {
+        return repository.findByNameIgnoreCase(name).map(CardMapper::toDomain);
+    }
+
+    @Override
     public Card save(Card card) {
         CardCacheEntity entity = CardMapper.toEntity(card);
         CardCacheEntity saved = repository.save(entity);

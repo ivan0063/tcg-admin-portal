@@ -1,8 +1,10 @@
 package com.tcg.portal.infrastructure.web;
 
 import com.tcg.portal.application.port.in.CardSearchUseCase;
+import com.tcg.portal.application.port.in.ImportDeckUseCase;
 import com.tcg.portal.application.port.in.ManageDeckUseCase;
 import com.tcg.portal.domain.model.DeckFormat;
+import com.tcg.portal.domain.model.ImportResult;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +16,14 @@ public class DeckController {
 
     private final ManageDeckUseCase deckUseCase;
     private final CardSearchUseCase cardSearchUseCase;
+    private final ImportDeckUseCase importDeckUseCase;
 
-    public DeckController(ManageDeckUseCase deckUseCase, CardSearchUseCase cardSearchUseCase) {
+    public DeckController(ManageDeckUseCase deckUseCase,
+                          CardSearchUseCase cardSearchUseCase,
+                          ImportDeckUseCase importDeckUseCase) {
         this.deckUseCase = deckUseCase;
         this.cardSearchUseCase = cardSearchUseCase;
+        this.importDeckUseCase = importDeckUseCase;
     }
 
     @GetMapping
@@ -38,9 +44,17 @@ public class DeckController {
     public String create(@RequestParam String name,
                          @RequestParam(required = false) String description,
                          @RequestParam DeckFormat format,
+                         @RequestParam(required = false) String cardList,
                          RedirectAttributes redirectAttributes) {
         var deck = deckUseCase.createDeck(name, description, format);
-        redirectAttributes.addFlashAttribute("successMessage", "Deck \"" + name + "\" created!");
+
+        if (cardList != null && !cardList.isBlank()) {
+            ImportResult result = importDeckUseCase.importFromList(deck.getId(), cardList);
+            applyImportFlash(redirectAttributes, result);
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Deck \"" + name + "\" created!");
+        }
+
         return "redirect:/decks/" + deck.getId();
     }
 
@@ -70,6 +84,15 @@ public class DeckController {
         return "redirect:/decks/" + id;
     }
 
+    @PostMapping("/{id}/import")
+    public String importCards(@PathVariable Long id,
+                              @RequestParam String cardList,
+                              RedirectAttributes redirectAttributes) {
+        ImportResult result = importDeckUseCase.importFromList(id, cardList);
+        applyImportFlash(redirectAttributes, result);
+        return "redirect:/decks/" + id;
+    }
+
     @PostMapping("/{id}/cards/{entryId}/remove")
     public String removeCard(@PathVariable Long id,
                              @PathVariable Long entryId,
@@ -84,5 +107,16 @@ public class DeckController {
         deckUseCase.deleteDeck(id);
         redirectAttributes.addFlashAttribute("successMessage", "Deck deleted.");
         return "redirect:/decks";
+    }
+
+    private void applyImportFlash(RedirectAttributes ra, ImportResult result) {
+        if (result.importedCount() > 0) {
+            ra.addFlashAttribute("successMessage",
+                    result.importedCount() + " card(s) imported successfully.");
+        }
+        if (result.hasFailures()) {
+            ra.addFlashAttribute("failedCount", result.failedCount());
+            ra.addFlashAttribute("failedCards", result.failedNames());
+        }
     }
 }

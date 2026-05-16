@@ -15,7 +15,7 @@
         <a th:href="@{/decks}" class="btn-ghost">&#8592; Back</a>
     </div>
 
-    <form th:action="@{/decks}" method="post" class="tcg-form">
+    <form th:action="@{/decks}" method="post" class="tcg-form" style="max-width:640px">
         <div class="form-group">
             <label class="form-label" for="name">Deck Name *</label>
             <input id="name" name="name" type="text" class="tcg-input"
@@ -32,7 +32,31 @@
             <textarea id="description" name="description" class="tcg-textarea"
                       placeholder="Deck strategy, notes..."></textarea>
         </div>
-        <div style="display:flex;gap:.75rem;justify-content:flex-end">
+
+        <!-- Optional bulk import -->
+        <details class="import-details">
+            <summary class="import-summary">
+                &#128196; Import from card list <span style="color:var(--text-dim);font-weight:400">(optional)</span>
+            </summary>
+            <div style="margin-top:.85rem">
+                <p class="import-format-hint">
+                    One card per line. Supports quantities and sideboard markers:
+                </p>
+                <pre class="import-example">4 Lightning Bolt
+3x Goblin Guide
+2 Mountain
+Sideboard:
+2 Searing Blood
+SB: 3 Relic of Progenitus</pre>
+                <div class="form-group" style="margin-top:.75rem;margin-bottom:0">
+                    <label class="form-label" for="cardList">Card List</label>
+                    <textarea id="cardList" name="cardList" class="tcg-textarea import-textarea"
+                              placeholder="4 Lightning Bolt&#10;3 Goblin Guide&#10;..."></textarea>
+                </div>
+            </div>
+        </details>
+
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem">
             <a th:href="@{/decks}" class="btn-ghost">Cancel</a>
             <button type="submit" class="btn-primary-tcg">Create Deck</button>
         </div>

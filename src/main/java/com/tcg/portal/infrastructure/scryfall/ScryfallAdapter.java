@@ -56,6 +56,31 @@ public class ScryfallAdapter implements CardSearchPort {
         }
     }
 
+    @Override
+    public Optional<Card> findByName(String name) {
+        // Try exact match first
+        try {
+            ScryfallCardDto dto = restClient.get()
+                    .uri("/cards/named?exact={name}", name)
+                    .retrieve()
+                    .body(ScryfallCardDto.class);
+            return Optional.ofNullable(dto).map(this::toDomain);
+        } catch (RestClientException exactEx) {
+            log.debug("Exact name '{}' not found, trying fuzzy: {}", name, exactEx.getMessage());
+        }
+        // Fall back to fuzzy
+        try {
+            ScryfallCardDto dto = restClient.get()
+                    .uri("/cards/named?fuzzy={name}", name)
+                    .retrieve()
+                    .body(ScryfallCardDto.class);
+            return Optional.ofNullable(dto).map(this::toDomain);
+        } catch (RestClientException fuzzyEx) {
+            log.warn("Card '{}' not found on Scryfall (exact + fuzzy): {}", name, fuzzyEx.getMessage());
+            return Optional.empty();
+        }
+    }
+
     private Card toDomain(ScryfallCardDto dto) {
         String imageUri = resolveImageUri(dto, "normal");
         String smallImageUri = resolveImageUri(dto, "small");

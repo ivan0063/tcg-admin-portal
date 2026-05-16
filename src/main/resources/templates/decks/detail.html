@@ -19,11 +19,10 @@
                 <span class="format-badge" th:text="${deck.format.label}">Modern</span>
             </div>
             <p class="page-subtitle" th:text="${deck.description}"></p>
-            <!-- Color identity -->
             <div class="color-pips" style="margin-top:.5rem">
                 <span th:each="c : ${deck.colorIdentity}" class="pip"
-                      th:classappend="'pip-' + ${c}"
-                      th:text="${c}" style="width:18px;height:18px;font-size:.7rem"></span>
+                      th:classappend="'pip-' + ${c}" th:text="${c}"
+                      style="width:18px;height:18px;font-size:.7rem"></span>
                 <span th:if="${#lists.isEmpty(deck.colorIdentity)}"
                       style="font-size:.8rem;color:var(--text-dim)">Colorless</span>
             </div>
@@ -53,12 +52,24 @@
         </div>
     </div>
 
-    <!-- Flash -->
+    <!-- ── Success flash ── -->
     <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
 
-    <!-- Search to add cards -->
+    <!-- ── Import failure banner ── -->
+    <details th:if="${failedCount != null and failedCount > 0}" class="import-failure-banner">
+        <summary>
+            &#9888;&#65039;
+            <strong th:text="${failedCount}">0</strong>
+            card(s) could not be imported &mdash; click to see the list
+        </summary>
+        <ul class="failed-cards-list">
+            <li th:each="cardName : ${failedCards}" th:text="${cardName}">Card name</li>
+        </ul>
+    </details>
+
+    <!-- ── Card search ── -->
     <div class="search-section">
-        <h3>&#128269; Add Cards</h3>
+        <h3>&#128269; Add Cards by Search</h3>
         <form th:action="@{/decks/{id}(id=${deck.id})}" method="get" class="search-form">
             <input type="text" name="q" class="tcg-input"
                    placeholder="Search Scryfall: Lightning Bolt, Counterspell..."
@@ -67,15 +78,12 @@
             <a th:href="@{/decks/{id}(id=${deck.id})}" class="btn-ghost" th:if="${query != null}">Clear</a>
         </form>
 
-        <!-- Search results -->
         <div th:if="${searchResults != null}" style="margin-top:1.25rem">
             <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem"
                th:text="${#lists.size(searchResults)} + ' result(s) for &quot;' + ${query} + '&quot;'"></p>
-
             <div th:if="${#lists.isEmpty(searchResults)}" style="color:var(--text-dim);font-size:.9rem">
                 No cards found. Try a different search.
             </div>
-
             <div class="card-grid">
                 <div th:each="card : ${searchResults}" class="tcg-card">
                     <img th:if="${card.smallImageUri != null}" th:src="${card.smallImageUri}"
@@ -108,16 +116,39 @@
         </div>
     </div>
 
-    <!-- Mainboard -->
+    <!-- ── Bulk import section ── -->
+    <details class="import-details" style="margin-bottom:1.5rem">
+        <summary class="import-summary">
+            &#128196; Import from card list
+        </summary>
+        <div style="margin-top:.85rem">
+            <p class="import-format-hint">
+                One card per line &mdash; with optional quantity and sideboard markers:
+            </p>
+            <pre class="import-example">4 Lightning Bolt
+3x Goblin Guide
+Sideboard:
+2 Searing Blood
+SB: 3 Relic of Progenitus</pre>
+            <form th:action="@{/decks/{id}/import(id=${deck.id})}" method="post"
+                  style="margin-top:.75rem;display:flex;flex-direction:column;gap:.75rem">
+                <textarea name="cardList" class="tcg-textarea import-textarea"
+                          placeholder="4 Lightning Bolt&#10;3 Goblin Guide&#10;..." required></textarea>
+                <div style="display:flex;justify-content:flex-end">
+                    <button type="submit" class="btn-primary-tcg">&#128194; Import Cards</button>
+                </div>
+            </form>
+        </div>
+    </details>
+
+    <!-- ── Mainboard ── -->
     <div class="deck-section-header">
         <h3>Mainboard</h3>
         <span class="count-badge" th:text="${deck.mainboardCount} + ' cards'">0 cards</span>
     </div>
-
     <div th:if="${#lists.isEmpty(deck.mainboard)}" class="empty-state" style="padding:1.5rem">
         <p style="color:var(--text-dim);font-size:.9rem">No mainboard cards yet.</p>
     </div>
-
     <div th:if="${not #lists.isEmpty(deck.mainboard)}"
          style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem">
         <table class="collection-table">
@@ -144,9 +175,7 @@
                 <td style="font-weight:600;font-size:.875rem" th:text="${entry.card.name}">Name</td>
                 <td style="color:var(--text-muted);font-size:.8rem" th:text="${entry.card.typeLine}">Type</td>
                 <td class="mana-cost" th:text="${entry.card.manaCost}"></td>
-                <td>
-                    <span style="font-weight:600;font-size:.95rem" th:text="${entry.quantity}">1</span>
-                </td>
+                <td style="font-weight:600" th:text="${entry.quantity}">1</td>
                 <td class="card-price" th:text="${entry.card.displayPrice()}"></td>
                 <td>
                     <form th:action="@{/decks/{id}/cards/{entryId}/remove(id=${deck.id},entryId=${entry.id})}"
@@ -159,16 +188,14 @@
         </table>
     </div>
 
-    <!-- Sideboard -->
+    <!-- ── Sideboard ── -->
     <div class="deck-section-header">
         <h3>Sideboard</h3>
         <span class="count-badge" th:text="${deck.sideboardCount} + ' cards'">0 cards</span>
     </div>
-
     <div th:if="${#lists.isEmpty(deck.sideboard)}" class="empty-state" style="padding:1.5rem">
         <p style="color:var(--text-dim);font-size:.9rem">No sideboard cards yet.</p>
     </div>
-
     <div th:if="${not #lists.isEmpty(deck.sideboard)}"
          style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
         <table class="collection-table">
@@ -195,9 +222,7 @@
                 <td style="font-weight:600;font-size:.875rem" th:text="${entry.card.name}">Name</td>
                 <td style="color:var(--text-muted);font-size:.8rem" th:text="${entry.card.typeLine}">Type</td>
                 <td class="mana-cost" th:text="${entry.card.manaCost}"></td>
-                <td>
-                    <span style="font-weight:600;font-size:.95rem" th:text="${entry.quantity}">1</span>
-                </td>
+                <td style="font-weight:600" th:text="${entry.quantity}">1</td>
                 <td class="card-price" th:text="${entry.card.displayPrice()}"></td>
                 <td>
                     <form th:action="@{/decks/{id}/cards/{entryId}/remove(id=${deck.id},entryId=${entry.id})}"
@@ -211,7 +236,6 @@
     </div>
 
 </div>
-
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>
