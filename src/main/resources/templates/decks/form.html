@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New Deck — TCG Portal</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">New Deck</h1>
+        <a th:href="@{/decks}" class="btn-ghost">&#8592; Back</a>
+    </div>
+
+    <form th:action="@{/decks}" method="post" class="tcg-form">
+        <div class="form-group">
+            <label class="form-label" for="name">Deck Name *</label>
+            <input id="name" name="name" type="text" class="tcg-input"
+                   placeholder="e.g. Mono-Red Burn" required style="width:100%">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="format">Format *</label>
+            <select id="format" name="format" class="tcg-select" style="width:100%">
+                <option th:each="f : ${formats}" th:value="${f.name()}" th:text="${f.label}">Format</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="description">Notes</label>
+            <textarea id="description" name="description" class="tcg-textarea"
+                      placeholder="Deck strategy, notes..."></textarea>
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end">
+            <a th:href="@{/decks}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-primary-tcg">Create Deck</button>
+        </div>
+    </form>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

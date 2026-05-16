@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Decks — TCG Portal</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">My Decks</h1>
+            <p class="page-subtitle" th:text="${#lists.size(decks)} + ' deck(s)'"></p>
+        </div>
+        <a th:href="@{/decks/new}" class="btn-primary-tcg">+ New Deck</a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
+
+    <div class="item-list" th:if="${not #lists.isEmpty(decks)}">
+        <div th:each="d : ${decks}"
+             style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;">
+            <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.25rem">
+                    <a th:href="@{/decks/{id}(id=${d.id})}"
+                       style="font-weight:600;font-size:1rem;color:var(--text);text-decoration:none"
+                       th:text="${d.name}">Name</a>
+                    <span class="format-badge" th:text="${d.format.label}">Modern</span>
+                </div>
+                <div style="font-size:.82rem;color:var(--text-muted)" th:text="${d.description}"></div>
+            </div>
+            <!-- Color identity pips -->
+            <div class="color-pips">
+                <span th:each="c : ${d.colorIdentity}" class="pip"
+                      th:classappend="'pip-' + ${c}"
+                      th:text="${c}"></span>
+            </div>
+            <div style="text-align:right;min-width:100px">
+                <div style="font-size:.85rem;color:var(--text-muted)">
+                    <span th:text="${d.mainboardCount}">0</span> main
+                    <span th:if="${d.sideboardCount > 0}" style="color:var(--text-dim)">&middot; <span th:text="${d.sideboardCount}">0</span> side</span>
+                </div>
+            </div>
+            <a th:href="@{/decks/{id}(id=${d.id})}" class="btn-ghost">Open</a>
+            <form th:action="@{/decks/{id}/delete(id=${d.id})}" method="post"
+                  onsubmit="return confirm('Delete this deck?')">
+                <button type="submit" class="btn-danger-tcg">&#128465;</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(decks)}">
+        <div class="empty-icon">&#127183;</div>
+        <p style="font-size:1.1rem;color:var(--text-muted)">No decks yet</p>
+        <p class="empty-hint">Build your first competitive deck.</p>
+        <a th:href="@{/decks/new}" class="btn-primary-tcg" style="margin-top:1rem;display:inline-flex">
+            + Create Deck
+        </a>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

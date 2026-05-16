@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Collections — TCG Portal</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">My Collections</h1>
+            <p class="page-subtitle" th:text="${#lists.size(collections)} + ' collection(s)'"></p>
+        </div>
+        <a th:href="@{/collections/new}" class="btn-primary-tcg">+ New Collection</a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
+
+    <div class="item-list" th:if="${not #lists.isEmpty(collections)}">
+        <div th:each="c : ${collections}"
+             style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;">
+            <div style="flex:1">
+                <a th:href="@{/collections/{id}(id=${c.id})}"
+                   style="font-weight:600;font-size:1rem;color:var(--text);text-decoration:none"
+                   th:text="${c.name}">Name</a>
+                <div style="font-size:.82rem;color:var(--text-muted);margin-top:.2rem" th:text="${c.description}"></div>
+            </div>
+            <div style="text-align:right;min-width:120px">
+                <div style="font-size:.85rem;color:var(--text-muted)">
+                    <span th:text="${c.totalCards}">0</span> cards
+                    &middot;
+                    <span th:text="${c.distinctCards}">0</span> distinct
+                </div>
+                <div style="font-size:.8rem;color:var(--accent);font-weight:600;margin-top:.2rem"
+                     th:text="'$' + ${#numbers.formatDecimal(c.totalValue,1,2)}"></div>
+            </div>
+            <a th:href="@{/collections/{id}(id=${c.id})}" class="btn-ghost">Open</a>
+            <form th:action="@{/collections/{id}/delete(id=${c.id})}" method="post"
+                  onsubmit="return confirm('Delete this collection?')">
+                <button type="submit" class="btn-danger-tcg">&#128465;</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(collections)}">
+        <div class="empty-icon">&#128218;</div>
+        <p style="font-size:1.1rem;color:var(--text-muted)">No collections yet</p>
+        <p class="empty-hint">Start tracking your cards by creating a collection.</p>
+        <a th:href="@{/collections/new}" class="btn-primary-tcg" style="margin-top:1rem;display:inline-flex">
+            + Create Collection
+        </a>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

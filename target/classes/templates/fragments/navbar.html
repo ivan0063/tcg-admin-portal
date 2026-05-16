@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="navbar" class="tcg-navbar">
+    <a href="/" class="brand">&#9670; TCG Portal</a>
+    <nav>
+        <a th:href="@{/}" th:classappend="${#httpServletRequest.requestURI == '/' ? 'active' : ''}">Dashboard</a>
+        <a th:href="@{/collections}" th:classappend="${#httpServletRequest.requestURI.startsWith('/collections') ? 'active' : ''}">Collections</a>
+        <a th:href="@{/decks}" th:classappend="${#httpServletRequest.requestURI.startsWith('/decks') ? 'active' : ''}">Decks</a>
+    </nav>
+</nav>
+</body>
+</html>

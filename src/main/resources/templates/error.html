@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Error — TCG Portal</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="page-container" style="max-width:600px">
+    <div style="margin-top:4rem;text-align:center">
+        <div style="font-size:3rem;margin-bottom:1rem">&#9888;</div>
+        <h1 style="font-size:1.5rem;color:var(--text);margin-bottom:.5rem" th:text="${errorTitle}">Error</h1>
+        <p style="color:var(--text-muted)" th:text="${errorMessage}">Something went wrong.</p>
+        <a href="/" class="btn-primary-tcg" style="margin-top:1.5rem;display:inline-flex">&#8592; Back to Dashboard</a>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
