@@ -21,15 +21,14 @@
     <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
 
     <div class="item-list" th:if="${not #lists.isEmpty(collections)}">
-        <div th:each="c : ${collections}"
-             style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;">
-            <div style="flex:1">
+        <div th:each="c : ${collections}" class="list-row">
+            <div class="list-row-body">
                 <a th:href="@{/collections/{id}(id=${c.id})}"
                    style="font-weight:600;font-size:1rem;color:var(--text);text-decoration:none"
                    th:text="${c.name}">Name</a>
                 <div style="font-size:.82rem;color:var(--text-muted);margin-top:.2rem" th:text="${c.description}"></div>
             </div>
-            <div style="text-align:right;min-width:120px">
+            <div class="list-row-meta">
                 <div style="font-size:.85rem;color:var(--text-muted)">
                     <span th:text="${c.totalCards}">0</span> cards
                     &middot;
@@ -38,11 +37,13 @@
                 <div style="font-size:.8rem;color:var(--accent);font-weight:600;margin-top:.2rem"
                      th:text="'$' + ${#numbers.formatDecimal(c.totalValue,1,2)}"></div>
             </div>
-            <a th:href="@{/collections/{id}(id=${c.id})}" class="btn-ghost">Open</a>
-            <form th:action="@{/collections/{id}/delete(id=${c.id})}" method="post"
-                  onsubmit="return confirm('Delete this collection?')">
-                <button type="submit" class="btn-danger-tcg">&#128465;</button>
-            </form>
+            <div class="list-row-actions">
+                <a th:href="@{/collections/{id}(id=${c.id})}" class="btn-ghost">Open</a>
+                <form th:action="@{/collections/{id}/delete(id=${c.id})}" method="post"
+                      onsubmit="return confirm('Delete this collection?')">
+                    <button type="submit" class="btn-danger-tcg">&#128465;</button>
+                </form>
+            </div>
         </div>
     </div>
 

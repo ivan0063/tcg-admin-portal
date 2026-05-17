@@ -27,7 +27,7 @@
     </div>
 
     <!-- Stats -->
-    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);max-width:480px;margin-bottom:1.5rem">
+    <div class="stats-grid stats-grid-3">
         <div class="stat-card">
             <div class="stat-label">Total Cards</div>
             <div class="stat-value" th:text="${collection.totalCards}">0</div>
@@ -101,8 +101,7 @@
         <p class="empty-hint">Use the search above to find and add cards.</p>
     </div>
 
-    <div th:if="${not #lists.isEmpty(collection.items)}"
-         style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <div th:if="${not #lists.isEmpty(collection.items)}" class="table-scroll">
         <table class="collection-table">
             <thead>
             <tr>
