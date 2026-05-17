@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:tcgdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    url: ${DB_URL:jdbc:h2:file:./data/tcgdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:}
     driver-class-name: ${DB_DRIVER:org.h2.Driver}
@@ -10,7 +10,7 @@ spring:
       path: /h2-console
   jpa:
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:create-drop}
+      ddl-auto: ${JPA_DDL_AUTO:update}
     show-sql: false
     open-in-view: false
   thymeleaf:
@@ -22,10 +22,13 @@ server:
 scryfall:
   base-url: https://api.scryfall.com
 
-# ── PostgreSQL example (pass as env vars or docker -e flags) ────
+mtgjson:
+  atomic-cards-url: https://mtgjson.com/api/v5/AtomicCards.json.gz
+
+# ── Switch to PostgreSQL (pass as env vars or docker -e flags) ────────────
 # DB_URL=jdbc:postgresql://localhost:5432/tcgdb
 # DB_USERNAME=tcguser
 # DB_PASSWORD=secret
 # DB_DRIVER=org.postgresql.Driver
-# JPA_DDL_AUTO=update
+# JPA_DDL_AUTO=update        ← keeps schema in sync; switch to Flyway/Liquibase for prod
 # H2_CONSOLE_ENABLED=false
