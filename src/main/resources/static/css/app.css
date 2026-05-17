@@ -672,7 +672,136 @@ details[open].import-failure-banner > summary::after { content: "▲ hide list";
     margin-top: 3rem;
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== CARD DETAIL MODAL ===== */
+.cm-clickable { cursor: pointer; }
+.cm-clickable:hover { border-color: var(--secondary) !important; }
+
+.cm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.78);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.cm-overlay.cm-open { display: flex; }
+
+.cm-dialog {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    position: relative;
+    padding: 1.5rem;
+    animation: cmSlideIn .18s ease;
+}
+@keyframes cmSlideIn {
+    from { opacity: 0; transform: translateY(12px) scale(.97); }
+    to   { opacity: 1; transform: none; }
+}
+
+.cm-close {
+    position: absolute;
+    top: .85rem;
+    right: .85rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s;
+    flex-shrink: 0;
+}
+.cm-close:hover { background: var(--bg-card); color: var(--text); }
+
+.cm-body { min-height: 120px; }
+.cm-loading { color: var(--text-muted); text-align: center; padding: 3rem 1rem; }
+.cm-error   { color: var(--danger);     text-align: center; padding: 2rem 1rem; }
+
+.cm-layout {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.cm-images {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    flex-shrink: 0;
+}
+
+.cm-img {
+    width: 210px;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.55);
+    display: block;
+}
+
+.cm-info {
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+    min-width: 0;
+    padding-right: 2rem; /* space for close button */
+}
+
+.cm-name     { font-size: 1.2rem; font-weight: 700; color: var(--text); line-height: 1.25; }
+.cm-mana     { font-family: monospace; color: var(--secondary); font-size: .9rem; }
+.cm-type     { color: var(--text-muted); font-size: .875rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
+.cm-face-name{ font-weight: 600; font-size: .875rem; color: var(--text); margin-top: .2rem; }
+.cm-oracle   { font-size: .875rem; color: var(--text); line-height: 1.6; }
+.cm-pt       { font-size: .85rem; color: var(--text-muted); font-weight: 600; margin-top: .15rem; }
+.cm-hr       { border: none; border-top: 1px solid var(--border); margin: .6rem 0; }
+
+.cm-meta {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    padding-top: .35rem;
+    border-top: 1px solid var(--border);
+}
+
+.cm-legalities {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .3rem .75rem;
+    padding-top: .65rem;
+    border-top: 1px solid var(--border);
+}
+.cm-leg-row  { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.cm-leg-fmt  { font-size: .72rem; color: var(--text-muted); text-transform: capitalize; }
+.cm-leg-badge{ font-size: .65rem; padding: .15rem .4rem; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+.cm-leg-legal{ background: #14532d44; color: #4ade80; border: 1px solid #22c55e44; }
+.cm-leg-not  { background: var(--bg-elevated); color: var(--text-dim); border: 1px solid var(--border); }
+.cm-leg-banned{ background: #7f1d1d44; color: #f87171; border: 1px solid #ef444444; }
+.cm-leg-rest { background: #42200644; color: #fbbf24; border: 1px solid #f59e0b44; }
+
+@media (max-width: 560px) {
+    .cm-dialog  { padding: 1rem; border-radius: 12px; }
+    .cm-layout  { grid-template-columns: 1fr; }
+    .cm-images  { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .cm-img     { width: 140px; }
+    .cm-info    { padding-right: 0; }
+    .cm-name    { font-size: 1.05rem; padding-right: 2rem; } /* avoid overlap with × */
+}
+
+/* ===== RESPONSIVE =====*/
 
 /* iPad mini portrait (768 px) — unlock the 3-col stat grid max-width */
 @media (max-width: 768px) {
