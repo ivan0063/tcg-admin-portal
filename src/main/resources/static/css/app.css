@@ -250,6 +250,45 @@ body {
 .pip-G { background: #00733e; color: #fff; }
 .pip-C { background: #888; color: #fff; }
 
+/* ===== DASHBOARD GRID ===== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+/* ===== 3-COLUMN STAT GRID VARIANT ===== */
+.stats-grid.stats-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 480px;
+    margin-bottom: 1.5rem;
+}
+
+/* ===== TABLE SCROLL WRAPPER ===== */
+.table-scroll {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ===== RESPONSIVE LIST ROWS (collections / decks list pages) ===== */
+.list-row {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: border-color .15s, background .15s;
+}
+.list-row:hover { border-color: var(--primary); background: var(--bg-elevated); }
+.list-row .list-row-body { flex: 1; min-width: 0; }
+.list-row .list-row-meta { text-align: right; min-width: 120px; flex-shrink: 0; }
+.list-row .list-row-actions { display: flex; gap: .5rem; align-items: center; flex-shrink: 0; }
+
 /* ===== COLLECTION / DECK LIST ===== */
 .item-list { display: flex; flex-direction: column; gap: .75rem; }
 
@@ -376,7 +415,6 @@ body {
     font-size: .9rem;
     transition: border-color .15s;
     flex: 1;
-    min-width: 200px;
 }
 
 .tcg-input:focus {
@@ -635,8 +673,51 @@ details[open].import-failure-banner > summary::after { content: "▲ hide list";
 }
 
 /* ===== RESPONSIVE ===== */
+
+/* iPad mini portrait (768 px) — unlock the 3-col stat grid max-width */
+@media (max-width: 768px) {
+    .stats-grid.stats-grid-3 { max-width: none; }
+}
+
+/* Tablet / large phone (≤ 640 px) */
 @media (max-width: 640px) {
+    .page-container { padding: 1.25rem .875rem; }
     .page-header { flex-direction: column; align-items: flex-start; }
-    .tcg-navbar { gap: 1rem; }
+    .tcg-navbar { gap: .75rem; }
     .card-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .tcg-form { padding: 1.25rem; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .list-row { flex-wrap: wrap; }
+    .list-row .list-row-body { flex: 1 0 100%; }
+    .list-row .list-row-meta { min-width: 0; text-align: left; flex: 1; }
+    .stats-grid.stats-grid-3 { grid-template-columns: 1fr 1fr; max-width: none; }
+}
+
+/* iPhone / small phone (≤ 430 px) */
+@media (max-width: 430px) {
+    .page-container { padding: 1rem .75rem; }
+    .page-title { font-size: 1.4rem; }
+
+    /* Navbar: brand on first line, nav links on second */
+    .tcg-navbar {
+        flex-wrap: wrap;
+        gap: .4rem;
+        padding: .6rem .75rem;
+    }
+    .tcg-navbar nav {
+        width: 100%;
+        border-top: 1px solid var(--border);
+        padding-top: .5rem;
+        gap: 0;
+    }
+    .tcg-navbar nav a { font-size: .82rem; padding: .35rem .6rem; }
+
+    /* Search form stacks vertically */
+    .search-form { flex-direction: column; }
+    .search-form .tcg-input { width: 100%; }
+
+    /* Bigger touch targets */
+    .btn-primary-tcg { min-height: 42px; }
+    .btn-ghost { min-height: 42px; }
+    .btn-sm-icon { min-height: 38px; min-width: 38px; justify-content: center; }
 }

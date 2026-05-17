@@ -21,10 +21,9 @@
     <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
 
     <div class="item-list" th:if="${not #lists.isEmpty(decks)}">
-        <div th:each="d : ${decks}"
-             style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;">
-            <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.25rem">
+        <div th:each="d : ${decks}" class="list-row">
+            <div class="list-row-body">
+                <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.25rem">
                     <a th:href="@{/decks/{id}(id=${d.id})}"
                        style="font-weight:600;font-size:1rem;color:var(--text);text-decoration:none"
                        th:text="${d.name}">Name</a>
@@ -32,23 +31,24 @@
                 </div>
                 <div style="font-size:.82rem;color:var(--text-muted)" th:text="${d.description}"></div>
             </div>
-            <!-- Color identity pips -->
-            <div class="color-pips">
-                <span th:each="c : ${d.colorIdentity}" class="pip"
-                      th:classappend="'pip-' + ${c}"
-                      th:text="${c}"></span>
-            </div>
-            <div style="text-align:right;min-width:100px">
+            <div class="list-row-meta">
+                <div class="color-pips" style="justify-content:flex-end;margin-bottom:.3rem">
+                    <span th:each="c : ${d.colorIdentity}" class="pip"
+                          th:classappend="'pip-' + ${c}"
+                          th:text="${c}"></span>
+                </div>
                 <div style="font-size:.85rem;color:var(--text-muted)">
                     <span th:text="${d.mainboardCount}">0</span> main
                     <span th:if="${d.sideboardCount > 0}" style="color:var(--text-dim)">&middot; <span th:text="${d.sideboardCount}">0</span> side</span>
                 </div>
             </div>
-            <a th:href="@{/decks/{id}(id=${d.id})}" class="btn-ghost">Open</a>
-            <form th:action="@{/decks/{id}/delete(id=${d.id})}" method="post"
-                  onsubmit="return confirm('Delete this deck?')">
-                <button type="submit" class="btn-danger-tcg">&#128465;</button>
-            </form>
+            <div class="list-row-actions">
+                <a th:href="@{/decks/{id}(id=${d.id})}" class="btn-ghost">Open</a>
+                <form th:action="@{/decks/{id}/delete(id=${d.id})}" method="post"
+                      onsubmit="return confirm('Delete this deck?')">
+                    <button type="submit" class="btn-danger-tcg">&#128465;</button>
+                </form>
+            </div>
         </div>
     </div>
 
