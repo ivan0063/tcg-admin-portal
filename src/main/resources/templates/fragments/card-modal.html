@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="card-modal">
+    <!-- Overlay: click outside closes modal -->
+    <div id="cardModal" class="cm-overlay" onclick="if(event.target===this)cmClose()">
+        <div class="cm-dialog" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
+            <button class="cm-close" onclick="cmClose()" aria-label="Close">&times;</button>
+            <div id="cmBody" class="cm-body">
+                <div class="cm-loading">Loading&hellip;</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        /* ── open / close ── */
+        function cmOpen(id) {
+            const body = document.getElementById('cmBody');
+            body.innerHTML = '<div class="cm-loading">Loading&hellip;</div>';
+            document.getElementById('cardModal').classList.add('cm-open');
+            document.body.style.overflow = 'hidden';
+
+            fetch('https://api.scryfall.com/cards/' + id)
+                .then(r => r.json())
+                .then(c => { body.innerHTML = cmRender(c); })
+                .catch(() => { body.innerHTML = '<p class="cm-error">Could not load card data.</p>'; });
+        }
+
+        window.cmClose = function () {
+            document.getElementById('cardModal').classList.remove('cm-open');
+            document.body.style.overflow = '';
+        };
+
+        /* Close on Escape */
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') cmClose(); });
+
+        /* Attach handlers once DOM is ready */
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.tcg-card[data-scryfall-id]').forEach(el => {
+                el.classList.add('cm-clickable');
+                el.addEventListener('click', e => {
+                    if (e.target.closest('form,button,a')) return;
+                    cmOpen(el.dataset.scryfallId);
+                });
+            });
+        });
+
+        /* ── render ── */
+        function esc(s) {
+            return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function cmRender(c) {
+            /* Images — support double-faced cards */
+            const faces = c.card_faces;
+            const imgs = faces
+                ? faces.filter(f => f.image_uris).map(f =>
+                    `<img src="${esc(f.image_uris.normal)}" alt="${esc(f.name)}" class="cm-img" loading="lazy">`)
+                : c.image_uris
+                    ? [`<img src="${esc(c.image_uris.normal)}" alt="${esc(c.name)}" class="cm-img" loading="lazy">`]
+                    : [];
+
+            /* Oracle text — handle faces */
+            const oracle = faces
+                ? faces.map(f =>
+                    `<div class="cm-face-name">${esc(f.name)}</div>` +
+                    `<div class="cm-oracle">${(f.oracle_text||'').replace(/\n/g,'<br>')}</div>` +
+                    (f.power != null ? `<div class="cm-pt">${esc(f.power)}/${esc(f.toughness)}</div>` : '') +
+                    (f.loyalty ? `<div class="cm-pt">Loyalty: ${esc(f.loyalty)}</div>` : '')
+                  ).join('<hr class="cm-hr">')
+                : `<div class="cm-oracle">${(c.oracle_text||'').replace(/\n/g,'<br>')}</div>` +
+                  (c.power != null ? `<div class="cm-pt">${esc(c.power)}/${esc(c.toughness)}</div>` : '') +
+                  (c.loyalty ? `<div class="cm-pt">Loyalty: ${esc(c.loyalty)}</div>` : '');
+
+            /* Price */
+            const priceItems = [
+                c.prices?.usd      ? `$${c.prices.usd}`       : null,
+                c.prices?.usd_foil ? `$${c.prices.usd_foil} foil` : null,
+            ].filter(Boolean);
+            const price = priceItems.length ? priceItems.join(' · ') : '—';
+
+            /* Rarity colour */
+            const rarityClass = { common:'rarity-common', uncommon:'rarity-uncommon',
+                                   rare:'rarity-rare', mythic:'rarity-mythic' }[c.rarity] || '';
+
+            /* Legalities */
+            const legalFormats = ['standard','pioneer','modern','legacy','commander','vintage'];
+            const legHtml = legalFormats.map(f => {
+                const v = (c.legalities||{})[f] || 'not_legal';
+                const cls = {legal:'cm-leg-legal', banned:'cm-leg-banned',
+                              restricted:'cm-leg-rest', not_legal:'cm-leg-not'}[v] || 'cm-leg-not';
+                const lbl = {legal:'Legal', banned:'Banned',
+                              restricted:'Rest.', not_legal:'—'}[v] || '—';
+                return `<div class="cm-leg-row">
+                            <span class="cm-leg-fmt">${f}</span>
+                            <span class="cm-leg-badge ${cls}">${lbl}</span>
+                        </div>`;
+            }).join('');
+
+            return `
+            <div class="cm-layout">
+                <div class="cm-images">${imgs.join('')}</div>
+                <div class="cm-info">
+                    <div id="cmTitle" class="cm-name">${esc(c.name)}</div>
+                    <div class="cm-mana">${esc(c.mana_cost || '')}</div>
+                    <div class="cm-type">${esc(c.type_line || '')}</div>
+                    ${oracle}
+                    <div class="cm-meta">
+                        <span class="badge-rarity ${rarityClass}">${esc(c.rarity||'')}</span>
+                        <span style="color:var(--text-muted);font-size:.8rem">${esc(c.set_name||'')}</span>
+                        <span class="card-price">${esc(price)}</span>
+                    </div>
+                    <div class="cm-legalities">${legHtml}</div>
+                </div>
+            </div>`;
+        }
+    }());
+    </script>
+</div>
+
+</body>
+</html>

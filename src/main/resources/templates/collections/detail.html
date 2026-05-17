@@ -67,7 +67,7 @@
             </div>
 
             <div class="card-grid">
-                <div th:each="card : ${searchResults}" class="tcg-card">
+                <div th:each="card : ${searchResults}" class="tcg-card" th:attr="data-scryfall-id=${card.scryfallId()}">
                     <img th:if="${card.smallImageUri != null}" th:src="${card.smallImageUri}"
                          th:alt="${card.name}" loading="lazy">
                     <div th:if="${card.smallImageUri == null}" class="card-placeholder">&#9670;</div>
@@ -167,6 +167,7 @@
     </div>
 </div>
 
+<div th:replace="~{fragments/card-modal :: card-modal}"></div>
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>
