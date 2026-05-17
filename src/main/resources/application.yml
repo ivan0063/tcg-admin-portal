@@ -22,6 +22,9 @@ server:
 scryfall:
   base-url: https://api.scryfall.com
 
+mtgjson:
+  atomic-cards-url: https://mtgjson.com/api/v5/AtomicCards.json.gz
+
 # ── PostgreSQL example (pass as env vars or docker -e flags) ────
 # DB_URL=jdbc:postgresql://localhost:5432/tcgdb
 # DB_USERNAME=tcguser
