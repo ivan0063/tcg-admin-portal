@@ -9,6 +9,12 @@
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
+<!-- Import status toast (managed by importPoller.js inline below) -->
+<div id="importToast" class="import-toast" hidden th:attr="data-deck-id=${deck.id}">
+    <span id="importToastMsg"></span>
+    <button type="button" class="import-toast-close" onclick="document.getElementById('importToast').hidden=true" aria-label="Dismiss">&times;</button>
+</div>
+
 <div class="page-container">
 
     <!-- Header -->
@@ -234,6 +240,48 @@ SB: 3 Relic of Progenitus</pre>
     </div>
 
 </div>
+<script>
+(function () {
+    var toast    = document.getElementById('importToast');
+    var toastMsg = document.getElementById('importToastMsg');
+    var deckId   = toast.dataset.deckId;
+    var timer    = null;
+
+    function show(msg, cls) {
+        toast.className = 'import-toast ' + cls;
+        toastMsg.textContent = msg;
+        toast.hidden = false;
+    }
+
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+    function check() {
+        fetch('/decks/' + deckId + '/import-status')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.state === 'PENDING') {
+                    show('Importando cartas… esto puede tardar un momento', 'import-toast-pending');
+                    if (!timer) timer = setInterval(check, 2500);
+                } else if (d.state === 'DONE') {
+                    stop();
+                    var imp = d.importedCount || 0;
+                    var fail = d.failedCount  || 0;
+                    if (fail === 0) {
+                        show('✓ ' + imp + ' carta(s) importadas · recarga para verlas', 'import-toast-success');
+                    } else {
+                        var names = (d.failedCards || []).join(', ');
+                        show('⚠ ' + imp + ' importadas · ' + fail + ' no encontradas: ' + names, 'import-toast-partial');
+                    }
+                } else {
+                    stop(); /* IDLE — no hay importación activa */
+                }
+            })
+            .catch(stop);
+    }
+
+    check();
+}());
+</script>
 <div th:replace="~{fragments/card-modal :: card-modal}"></div>
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>

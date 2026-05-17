@@ -1,10 +1,12 @@
 package com.tcg.portal.infrastructure.web;
 
 import com.tcg.portal.application.port.in.CardSearchUseCase;
-import com.tcg.portal.application.port.in.ImportDeckUseCase;
 import com.tcg.portal.application.port.in.ManageDeckUseCase;
+import com.tcg.portal.application.service.AsyncImportService;
+import com.tcg.portal.application.service.ImportJob;
+import com.tcg.portal.application.service.ImportJobStore;
 import com.tcg.portal.domain.model.DeckFormat;
-import com.tcg.portal.domain.model.ImportResult;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,14 +18,17 @@ public class DeckController {
 
     private final ManageDeckUseCase deckUseCase;
     private final CardSearchUseCase cardSearchUseCase;
-    private final ImportDeckUseCase importDeckUseCase;
+    private final AsyncImportService asyncImportService;
+    private final ImportJobStore importJobStore;
 
     public DeckController(ManageDeckUseCase deckUseCase,
                           CardSearchUseCase cardSearchUseCase,
-                          ImportDeckUseCase importDeckUseCase) {
+                          AsyncImportService asyncImportService,
+                          ImportJobStore importJobStore) {
         this.deckUseCase = deckUseCase;
         this.cardSearchUseCase = cardSearchUseCase;
-        this.importDeckUseCase = importDeckUseCase;
+        this.asyncImportService = asyncImportService;
+        this.importJobStore = importJobStore;
     }
 
     @GetMapping
@@ -49,8 +54,8 @@ public class DeckController {
         var deck = deckUseCase.createDeck(name, description, format);
 
         if (cardList != null && !cardList.isBlank()) {
-            ImportResult result = importDeckUseCase.importFromList(deck.getId(), cardList);
-            applyImportFlash(redirectAttributes, result);
+            asyncImportService.startImport(deck.getId(), cardList);
+            redirectAttributes.addFlashAttribute("importPending", true);
         } else {
             redirectAttributes.addFlashAttribute("successMessage", "Deck \"" + name + "\" created!");
         }
@@ -88,9 +93,16 @@ public class DeckController {
     public String importCards(@PathVariable Long id,
                               @RequestParam String cardList,
                               RedirectAttributes redirectAttributes) {
-        ImportResult result = importDeckUseCase.importFromList(id, cardList);
-        applyImportFlash(redirectAttributes, result);
+        asyncImportService.startImport(id, cardList);
+        redirectAttributes.addFlashAttribute("importPending", true);
         return "redirect:/decks/" + id;
+    }
+
+    /** Polled by the front-end to track async import progress. */
+    @GetMapping(value = "/{id}/import-status", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ImportJob importStatus(@PathVariable Long id) {
+        return importJobStore.pollStatus(id);
     }
 
     @PostMapping("/{id}/cards/{entryId}/remove")
@@ -107,16 +119,5 @@ public class DeckController {
         deckUseCase.deleteDeck(id);
         redirectAttributes.addFlashAttribute("successMessage", "Deck deleted.");
         return "redirect:/decks";
-    }
-
-    private void applyImportFlash(RedirectAttributes ra, ImportResult result) {
-        if (result.importedCount() > 0) {
-            ra.addFlashAttribute("successMessage",
-                    result.importedCount() + " card(s) imported successfully.");
-        }
-        if (result.hasFailures()) {
-            ra.addFlashAttribute("failedCount", result.failedCount());
-            ra.addFlashAttribute("failedCards", result.failedNames());
-        }
     }
 }
