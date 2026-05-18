@@ -10,8 +10,15 @@ public class ImportJobStore {
 
     private final ConcurrentHashMap<Long, ImportJob> jobs = new ConcurrentHashMap<>();
 
-    public void markPending(Long deckId) {
-        jobs.put(deckId, ImportJob.pending());
+    public void markPending(Long deckId, int total) {
+        jobs.put(deckId, ImportJob.pending(total));
+    }
+
+    public void markProgress(Long deckId, int processed, int total, int imported, int failed) {
+        jobs.computeIfPresent(deckId, (k, existing) -> {
+            if (existing.state() == ImportJob.State.DONE) return existing;
+            return ImportJob.running(processed, total, imported, failed);
+        });
     }
 
     public void markDone(Long deckId, int imported, int failed, List<String> cards) {
