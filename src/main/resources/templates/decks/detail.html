@@ -61,17 +61,20 @@
     <!-- ── Success flash ── -->
     <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
 
-    <!-- ── Import failure banner ── -->
-    <details th:if="${failedCount != null and failedCount > 0}" class="import-failure-banner">
-        <summary>
-            &#9888;&#65039;
-            <strong th:text="${failedCount}">0</strong>
-            card(s) could not be imported &mdash; click to see the list
-        </summary>
+    <!-- ── Persistent import failures ── -->
+    <div th:if="${not #lists.isEmpty(importFailures)}" class="import-failure-banner">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <span style="font-weight:600;font-size:.9rem">
+                &#9888; <span th:text="${#lists.size(importFailures)}">0</span> carta(s) no encontradas en el último import
+            </span>
+            <form th:action="@{/decks/{id}/import-failures/clear(id=${deck.id})}" method="post" style="margin-left:auto">
+                <button type="submit" class="btn-ghost" style="font-size:.8rem;padding:.3rem .65rem">&#10005; Limpiar</button>
+            </form>
+        </div>
         <ul class="failed-cards-list">
-            <li th:each="cardName : ${failedCards}" th:text="${cardName}">Card name</li>
+            <li th:each="cardName : ${importFailures}" th:text="${cardName}">Card name</li>
         </ul>
-    </details>
+    </div>
 
     <!-- ── Card search ── -->
     <div class="search-section">
@@ -269,8 +272,7 @@ SB: 3 Relic of Progenitus</pre>
                     if (fail === 0) {
                         show('✓ ' + imp + ' carta(s) importadas · recarga para verlas', 'import-toast-success');
                     } else {
-                        var names = (d.failedCards || []).join(', ');
-                        show('⚠ ' + imp + ' importadas · ' + fail + ' no encontradas: ' + names, 'import-toast-partial');
+                        show('⚠ ' + imp + ' importadas · ' + fail + ' no encontradas · recarga para ver la lista', 'import-toast-partial');
                     }
                 } else {
                     stop(); /* IDLE — no hay importación activa */

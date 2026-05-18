@@ -696,9 +696,9 @@ details[open].import-failure-banner > summary::after { content: "▲ hide list";
     from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
     to   { opacity: 1; transform: translateX(-50%); }
 }
-.import-toast-pending { border-color: var(--primary)88; color: var(--text-muted); }
-.import-toast-success { background: #14532d33; border-color: #22c55e66; color: #4ade80; }
-.import-toast-partial  { background: #42200633; border-color: #f59e0b66; color: #fbbf24; }
+.import-toast-pending { border-color: var(--primary); color: var(--text-muted); }
+.import-toast-success { background: #14532d; border-color: #22c55e; color: #4ade80; }
+.import-toast-partial  { background: #431407; border-color: #f59e0b; color: #fbbf24; }
 .import-toast-close {
     background: none;
     border: none;

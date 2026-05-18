@@ -4,6 +4,7 @@ import com.tcg.portal.application.port.in.ManageDeckUseCase;
 import com.tcg.portal.application.port.out.CardCachePort;
 import com.tcg.portal.application.port.out.CardSearchPort;
 import com.tcg.portal.application.port.out.DeckRepository;
+import com.tcg.portal.application.port.out.ImportFailureRepository;
 import com.tcg.portal.domain.exception.CardNotFoundException;
 import com.tcg.portal.domain.exception.DeckNotFoundException;
 import com.tcg.portal.domain.model.Card;
@@ -24,13 +25,16 @@ public class DeckService implements ManageDeckUseCase {
     private final DeckRepository deckRepository;
     private final CardCachePort cardCachePort;
     private final CardSearchPort cardSearchPort;
+    private final ImportFailureRepository importFailureRepository;
 
     public DeckService(DeckRepository deckRepository,
                        CardCachePort cardCachePort,
-                       CardSearchPort cardSearchPort) {
+                       CardSearchPort cardSearchPort,
+                       ImportFailureRepository importFailureRepository) {
         this.deckRepository = deckRepository;
         this.cardCachePort = cardCachePort;
         this.cardSearchPort = cardSearchPort;
+        this.importFailureRepository = importFailureRepository;
     }
 
     @Override
@@ -93,7 +97,19 @@ public class DeckService implements ManageDeckUseCase {
 
     @Override
     public void deleteDeck(Long id) {
+        importFailureRepository.clearByDeckId(id);
         deckRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getImportFailures(Long deckId) {
+        return importFailureRepository.findCardNamesByDeckId(deckId);
+    }
+
+    @Override
+    public void clearImportFailures(Long deckId) {
+        importFailureRepository.clearByDeckId(deckId);
     }
 
     private Card resolveCard(String scryfallId) {

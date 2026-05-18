@@ -72,10 +72,19 @@ public class DeckController {
         model.addAttribute("query", q);
         model.addAttribute("pageTitle", deck.getName());
 
+        model.addAttribute("importFailures", deckUseCase.getImportFailures(id));
+
         if (q != null && !q.isBlank()) {
             model.addAttribute("searchResults", cardSearchUseCase.searchCards(q));
         }
         return "decks/detail";
+    }
+
+    @PostMapping("/{id}/import-failures/clear")
+    public String clearImportFailures(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        deckUseCase.clearImportFailures(id);
+        redirectAttributes.addFlashAttribute("successMessage", "Import failure list cleared.");
+        return "redirect:/decks/" + id;
     }
 
     @PostMapping("/{id}/cards")
