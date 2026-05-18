@@ -8,6 +8,7 @@ import com.tcg.portal.domain.exception.DeckNotFoundException;
 import com.tcg.portal.domain.model.Card;
 import com.tcg.portal.domain.model.Deck;
 import com.tcg.portal.domain.model.DeckEntry;
+import com.tcg.portal.domain.model.FailedCard;
 import com.tcg.portal.domain.model.ImportResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class ImportDeckService implements ImportDeckUseCase {
 
         List<ParsedEntry> entries = parse(cardList);
         List<String> importedNames = new ArrayList<>();
-        List<String> failedNames = new ArrayList<>();
+        List<FailedCard> failedCards = new ArrayList<>();
 
         for (ParsedEntry entry : entries) {
             Optional<Card> resolved = resolveCard(entry.name());
@@ -56,12 +57,13 @@ public class ImportDeckService implements ImportDeckUseCase {
                 importedNames.add(card.name());
             } else {
                 log.info("Could not resolve card '{}' during import for deck {}", entry.name(), deckId);
-                failedNames.add(entry.name());
+                String diag = cardSearchPort.lastDiagnostics();
+                failedCards.add(new FailedCard(entry.name(), diag));
             }
         }
 
         Deck saved = deckRepository.save(deck);
-        return new ImportResult(saved, importedNames, failedNames);
+        return new ImportResult(saved, importedNames, failedCards);
     }
 
     // ── Parsing ─────────────────────────────────────────────────

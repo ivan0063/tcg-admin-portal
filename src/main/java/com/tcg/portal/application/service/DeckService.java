@@ -11,6 +11,7 @@ import com.tcg.portal.domain.model.Card;
 import com.tcg.portal.domain.model.Deck;
 import com.tcg.portal.domain.model.DeckEntry;
 import com.tcg.portal.domain.model.DeckFormat;
+import com.tcg.portal.domain.model.FailedCard;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,8 +104,8 @@ public class DeckService implements ManageDeckUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<String> getImportFailures(Long deckId) {
-        return importFailureRepository.findCardNamesByDeckId(deckId);
+    public List<FailedCard> getImportFailures(Long deckId) {
+        return importFailureRepository.findFailuresByDeckId(deckId);
     }
 
     @Override

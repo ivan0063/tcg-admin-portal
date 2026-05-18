@@ -3,6 +3,7 @@ package com.tcg.portal.infrastructure.scryfall;
 import com.tcg.portal.application.port.out.CardSearchPort;
 import com.tcg.portal.domain.model.Card;
 import com.tcg.portal.infrastructure.cardchain.CardSearchChain;
+import com.tcg.portal.infrastructure.cardchain.ChainResult;
 import com.tcg.portal.infrastructure.scryfall.dto.ScryfallCardDto;
 import com.tcg.portal.infrastructure.scryfall.dto.ScryfallSearchResponse;
 import org.slf4j.Logger;
@@ -18,6 +19,8 @@ import java.util.Optional;
 public class ScryfallAdapter implements CardSearchPort {
 
     private static final Logger log = LoggerFactory.getLogger(ScryfallAdapter.class);
+
+    private static final ThreadLocal<String> lastDiagnosticsHolder = new ThreadLocal<>();
 
     private final RestClient restClient;
     private final ScryfallCardMapper mapper;
@@ -62,6 +65,16 @@ public class ScryfallAdapter implements CardSearchPort {
 
     @Override
     public Optional<Card> findByName(String name) {
-        return chain.findByName(name);
+        lastDiagnosticsHolder.remove();
+        ChainResult result = chain.findByName(name);
+        if (!result.found()) {
+            lastDiagnosticsHolder.set(result.diagnosticsJson());
+        }
+        return result.card();
+    }
+
+    @Override
+    public String lastDiagnostics() {
+        return lastDiagnosticsHolder.get();
     }
 }

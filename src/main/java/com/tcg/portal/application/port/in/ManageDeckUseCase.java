@@ -2,6 +2,7 @@ package com.tcg.portal.application.port.in;
 
 import com.tcg.portal.domain.model.Deck;
 import com.tcg.portal.domain.model.DeckFormat;
+import com.tcg.portal.domain.model.FailedCard;
 
 import java.util.List;
 
@@ -13,6 +14,6 @@ public interface ManageDeckUseCase {
     Deck removeCard(Long deckId, Long entryId);
     Deck updateEntry(Long deckId, Long entryId, int quantity, boolean sideboard);
     void deleteDeck(Long id);
-    List<String> getImportFailures(Long deckId);
+    List<FailedCard> getImportFailures(Long deckId);
     void clearImportFailures(Long deckId);
 }

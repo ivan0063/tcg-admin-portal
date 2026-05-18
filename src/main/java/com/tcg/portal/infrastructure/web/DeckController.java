@@ -7,6 +7,7 @@ import com.tcg.portal.application.service.ImportJob;
 import com.tcg.portal.application.service.ImportJobStore;
 import com.tcg.portal.domain.model.Deck;
 import com.tcg.portal.domain.model.DeckFormat;
+import com.tcg.portal.domain.model.FailedCard;
 import org.springframework.http.MediaType;
 import java.util.List;
 import org.springframework.stereotype.Controller;
@@ -97,12 +98,11 @@ public class DeckController {
 
     @PostMapping("/{id}/import-failures/retry")
     public String retryImportFailures(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        List<String> failed = deckUseCase.getImportFailures(id);
+        List<FailedCard> failed = deckUseCase.getImportFailures(id);
         if (failed.isEmpty()) {
             return "redirect:/decks/" + id;
         }
-        // Build card-list text from the stored names (qty=1, mainboard)
-        String cardList = String.join("\n", failed.stream().map(n -> "1 " + n).toList());
+        String cardList = String.join("\n", failed.stream().map(f -> "1 " + f.name()).toList());
         asyncImportService.startImport(id, cardList);
         redirectAttributes.addFlashAttribute("importPending", true);
         return "redirect:/decks/" + id;

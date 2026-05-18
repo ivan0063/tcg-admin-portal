@@ -2,8 +2,8 @@ package com.tcg.portal.infrastructure.mtgjson;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import com.tcg.portal.domain.model.Card;
 import com.tcg.portal.infrastructure.cardchain.CardSearchProvider;
+import com.tcg.portal.infrastructure.cardchain.ProviderResult;
 import com.tcg.portal.infrastructure.scryfall.ScryfallCardMapper;
 import com.tcg.portal.infrastructure.scryfall.dto.ScryfallSearchResponse;
 import org.slf4j.Logger;
@@ -16,11 +16,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.GZIPInputStream;
@@ -81,15 +81,15 @@ public class MtgjsonProvider implements CardSearchProvider {
     }
 
     @Override
-    public Optional<Card> findByName(String name) {
+    public ProviderResult findByName(String name) {
         if (!indexReady.get()) {
             log.debug("MTGJSON index not ready, skipping");
-            return Optional.empty();
+            return ProviderResult.skipped(providerName(), "index not ready");
         }
         String oracleId = nameIndex.get(name.toLowerCase());
         if (oracleId == null) {
             log.debug("MTGJSON: '{}' not in index", name);
-            return Optional.empty();
+            return ProviderResult.skipped(providerName(), "not in index");
         }
         try {
             ScryfallSearchResponse response = scryfallRestClient.get()
@@ -97,12 +97,15 @@ public class MtgjsonProvider implements CardSearchProvider {
                     .retrieve()
                     .body(ScryfallSearchResponse.class);
             if (response == null || response.data() == null || response.data().isEmpty()) {
-                return Optional.empty();
+                return ProviderResult.notFound(providerName(), 200, "empty response");
             }
-            return Optional.of(mapper.toDomain(response.data().get(0)));
+            return ProviderResult.found(providerName(), mapper.toDomain(response.data().get(0)));
+        } catch (RestClientResponseException e) {
+            log.debug("MTGJSON→Scryfall lookup failed for '{}' (oracleId={}): {}", name, oracleId, e.getMessage());
+            return ProviderResult.notFound(providerName(), e.getStatusCode().value(), e.getResponseBodyAsString());
         } catch (RestClientException e) {
             log.debug("MTGJSON→Scryfall lookup failed for '{}' (oracleId={}): {}", name, oracleId, e.getMessage());
-            return Optional.empty();
+            return ProviderResult.notFound(providerName(), 0, e.getMessage());
         }
     }
 

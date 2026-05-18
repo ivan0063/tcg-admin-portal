@@ -32,8 +32,8 @@ public class AsyncImportService {
         log.info("Async import started for deck {}", deckId);
         try {
             ImportResult result = importDeckUseCase.importFromList(deckId, cardList);
-            if (!result.failedNames().isEmpty()) {
-                importFailureRepository.saveFailures(deckId, result.failedNames());
+            if (!result.failedCards().isEmpty()) {
+                importFailureRepository.saveFailures(deckId, result.failedCards());
             }
             jobStore.markDone(deckId, result.importedCount(), result.failedCount(), result.failedNames());
             log.info("Async import done for deck {}: {} imported, {} failed",

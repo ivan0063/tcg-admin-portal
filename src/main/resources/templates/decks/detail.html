@@ -253,15 +253,15 @@ SB: 3 Relic of Progenitus</pre>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="cardName : ${importFailures}">
-                    <td style="font-weight:600;font-size:.875rem;color:var(--text-muted)" th:text="${cardName}">Nombre</td>
+                <tr th:each="failure : ${importFailures}">
+                    <td style="font-weight:600;font-size:.875rem;color:var(--text-muted)" th:text="${failure.name()}">Nombre</td>
                     <td style="text-align:right;white-space:nowrap">
                         <div style="display:flex;gap:.3rem;justify-content:flex-end">
                             <button type="button" class="btn-sm-icon"
-                                    th:attr="data-card-name=${cardName}"
-                                    onclick="openApiDebug(this.dataset.cardName)"
-                                    title="Ver respuesta raw de Scryfall">&#128203; API</button>
-                            <a th:href="@{/decks/{id}(id=${deck.id},q=${cardName})}" class="btn-sm-icon"
+                                    th:attr="data-card-name=${failure.name()},data-diag=${failure.diagnosticsJson()}"
+                                    onclick="openApiDebug(this)"
+                                    title="Ver diagnóstico de búsqueda">&#128203; API</button>
+                            <a th:href="@{/decks/{id}(id=${deck.id},q=${failure.name()})}" class="btn-sm-icon"
                                title="Buscar en el deck">&#128269;</a>
                         </div>
                     </td>
@@ -341,7 +341,7 @@ SB: 3 Relic of Progenitus</pre>
             <button class="util-close" onclick="closeApiDebug()" aria-label="Cerrar">&times;</button>
         </div>
         <p style="font-size:.8rem;color:var(--text-dim);margin:0 0 1rem">
-            Misma cadena que usa el servidor: exact → fuzzy → search.
+            Diagnóstico capturado durante la importación: exact &#8594; fuzzy &#8594; search &#8594; MTGJSON.
         </p>
         <div id="apiDebugBody"></div>
     </div>
@@ -375,54 +375,46 @@ function copyArenaText() {
 }
 
 /* ── API Debug modal ── */
-function openApiDebug(cardName) {
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openApiDebug(btn) {
+    var cardName = btn.dataset.cardName || '';
+    var diag     = btn.dataset.diag    || '';
     document.getElementById('apiDebugTitle').textContent = cardName;
-    document.getElementById('apiDebugBody').innerHTML = '<p style="color:var(--text-muted)">Consultando Scryfall…</p>';
     document.getElementById('apiDebugModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    var base = 'https://api.scryfall.com';
-    var results = [];
-
-    function tryEndpoint(url, label) {
-        return fetch(url)
-            .then(function(r) {
-                return r.json().then(function(body) {
-                    results.push({ label: label, status: r.status, ok: r.ok, body: body });
-                    return r.ok;
-                });
-            });
-    }
-
-    tryEndpoint(base + '/cards/named?exact=' + encodeURIComponent(cardName),
-                'GET /cards/named?exact=' + cardName)
-    .then(function(found) {
-        if (found) { renderApiDebug(results); return Promise.resolve(); }
-        return tryEndpoint(base + '/cards/named?fuzzy=' + encodeURIComponent(cardName),
-                           'GET /cards/named?fuzzy=' + cardName)
-        .then(function(found2) {
-            if (found2) { renderApiDebug(results); return Promise.resolve(); }
-            return tryEndpoint(
-                base + '/cards/search?q=' + encodeURIComponent('!"' + cardName + '"') + '&unique=cards&order=released',
-                'GET /cards/search?q=!"' + cardName + '"')
-            .then(function() { renderApiDebug(results); });
-        });
-    })
-    .catch(function(err) {
+    if (!diag) {
         document.getElementById('apiDebugBody').innerHTML =
-            '<p style="color:#f87171">Error de red: ' + err.message + '</p>';
-    });
+            '<p style="color:var(--text-dim)">No hay datos de diagnóstico almacenados para esta carta.</p>';
+        return;
+    }
+    try {
+        var attempts = JSON.parse(diag);
+        renderApiDebug(attempts);
+    } catch (e) {
+        document.getElementById('apiDebugBody').innerHTML =
+            '<pre class="api-pre">' + escHtml(diag) + '</pre>';
+    }
 }
 
-function renderApiDebug(results) {
-    var html = results.map(function(r) {
+function renderApiDebug(attempts) {
+    var html = attempts.map(function(a) {
+        var ok = a.found === true;
+        var statusHtml = a.status ? '<span class="' + (ok ? 'api-status-ok' : 'api-status-err') + '">HTTP ' + a.status + '</span>' : '';
+        var bodyHtml = '';
+        if (a.body !== null && a.body !== undefined) {
+            var pretty;
+            try { pretty = JSON.stringify(JSON.parse(a.body), null, 2); }
+            catch (e) { pretty = String(a.body); }
+            bodyHtml = '<pre class="api-pre">' + escHtml(pretty) + '</pre>';
+        }
         return '<div class="api-result">' +
             '<div class="api-result-header">' +
-            '<code>' + r.label + '</code>' +
-            '<span class="' + (r.ok ? 'api-status-ok' : 'api-status-err') + '">HTTP ' + r.status + '</span>' +
-            '</div>' +
-            '<pre class="api-pre">' + JSON.stringify(r.body, null, 2) + '</pre>' +
-            '</div>';
+            '<code>' + escHtml(a.provider) + '</code>' + statusHtml +
+            '</div>' + bodyHtml + '</div>';
     }).join('');
     document.getElementById('apiDebugBody').innerHTML = html;
 }
