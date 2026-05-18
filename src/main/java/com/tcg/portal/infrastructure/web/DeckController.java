@@ -5,6 +5,7 @@ import com.tcg.portal.application.port.in.ManageDeckUseCase;
 import com.tcg.portal.application.service.AsyncImportService;
 import com.tcg.portal.application.service.ImportJob;
 import com.tcg.portal.application.service.ImportJobStore;
+import com.tcg.portal.domain.model.Deck;
 import com.tcg.portal.domain.model.DeckFormat;
 import org.springframework.http.MediaType;
 import java.util.List;
@@ -74,11 +75,24 @@ public class DeckController {
         model.addAttribute("pageTitle", deck.getName());
 
         model.addAttribute("importFailures", deckUseCase.getImportFailures(id));
+        model.addAttribute("arenaText", buildArenaText(deck));
 
         if (q != null && !q.isBlank()) {
             model.addAttribute("searchResults", cardSearchUseCase.searchCards(q));
         }
         return "decks/detail";
+    }
+
+    private static String buildArenaText(Deck deck) {
+        var sb = new StringBuilder("Deck\n");
+        deck.getMainboard().forEach(e ->
+                sb.append(e.getQuantity()).append(" ").append(e.getCard().name()).append("\n"));
+        if (!deck.getSideboard().isEmpty()) {
+            sb.append("\nSideboard\n");
+            deck.getSideboard().forEach(e ->
+                    sb.append(e.getQuantity()).append(" ").append(e.getCard().name()).append("\n"));
+        }
+        return sb.toString().stripTrailing();
     }
 
     @PostMapping("/{id}/import-failures/retry")

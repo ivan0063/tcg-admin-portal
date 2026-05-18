@@ -35,8 +35,9 @@
                       style="font-size:.8rem;color:var(--text-dim)">Colorless</span>
             </div>
         </div>
-        <div style="display:flex;gap:.5rem;align-items:center">
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
             <a th:href="@{/decks}" class="btn-ghost">&#8592; Decks</a>
+            <button type="button" class="btn-ghost" onclick="openArenaModal()">&#9876; Arena</button>
             <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post"
                   onsubmit="return confirm('Delete this deck?')">
                 <button type="submit" class="btn-danger-tcg">&#128465; Delete</button>
@@ -254,8 +255,15 @@ SB: 3 Relic of Progenitus</pre>
                 <tbody>
                 <tr th:each="cardName : ${importFailures}">
                     <td style="font-weight:600;font-size:.875rem;color:var(--text-muted)" th:text="${cardName}">Nombre</td>
-                    <td style="text-align:right">
-                        <a th:href="@{/decks/{id}(id=${deck.id},q=${cardName})}" class="btn-sm-icon">&#128269; Buscar</a>
+                    <td style="text-align:right;white-space:nowrap">
+                        <div style="display:flex;gap:.3rem;justify-content:flex-end">
+                            <button type="button" class="btn-sm-icon"
+                                    th:attr="data-card-name=${cardName}"
+                                    onclick="openApiDebug(this.dataset.cardName)"
+                                    title="Ver respuesta raw de Scryfall">&#128203; API</button>
+                            <a th:href="@{/decks/{id}(id=${deck.id},q=${cardName})}" class="btn-sm-icon"
+                               title="Buscar en el deck">&#128269;</a>
+                        </div>
                     </td>
                 </tr>
                 </tbody>
@@ -305,6 +313,126 @@ SB: 3 Relic of Progenitus</pre>
     check();
 }());
 </script>
+<!-- ── Arena Export Modal ── -->
+<div id="arenaModal" class="util-overlay" onclick="if(event.target===this)closeArenaModal()">
+    <div class="util-dialog">
+        <div class="util-dialog-header">
+            <h3>&#9876; Exportar a Magic Arena</h3>
+            <button class="util-close" onclick="closeArenaModal()" aria-label="Cerrar">&times;</button>
+        </div>
+        <div style="background:#42200630;border:1px solid #f59e0b55;border-radius:8px;padding:.65rem .9rem;margin-bottom:1rem;font-size:.82rem;color:#fbbf24">
+            &#9888; Las cartas rebalanceadas de Alchemy llevan el prefijo <strong>A-</strong> en Arena (p.ej. <em>A-Esika's Chariot</em>).
+            Si Arena no encuentra alguna carta, verifica que el nombre coincida con la versión digital.
+        </div>
+        <textarea id="arenaTextarea" class="util-textarea" rows="16" readonly
+                  th:text="${arenaText}"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.75rem">
+            <button id="copyArenaBtn" type="button" class="btn-primary-tcg" onclick="copyArenaText()">Copiar</button>
+            <button type="button" class="btn-ghost" onclick="closeArenaModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── API Debug Modal ── -->
+<div id="apiDebugModal" class="util-overlay" onclick="if(event.target===this)closeApiDebug()">
+    <div class="util-dialog">
+        <div class="util-dialog-header">
+            <h3>&#128203; API Debug: <span id="apiDebugTitle" style="color:var(--primary)"></span></h3>
+            <button class="util-close" onclick="closeApiDebug()" aria-label="Cerrar">&times;</button>
+        </div>
+        <p style="font-size:.8rem;color:var(--text-dim);margin:0 0 1rem">
+            Misma cadena que usa el servidor: exact → fuzzy → search.
+        </p>
+        <div id="apiDebugBody"></div>
+    </div>
+</div>
+
+<script>
+/* ── Arena modal ── */
+function openArenaModal() {
+    document.getElementById('arenaModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeArenaModal() {
+    document.getElementById('arenaModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+function copyArenaText() {
+    var ta = document.getElementById('arenaTextarea');
+    ta.select();
+    ta.setSelectionRange(0, 99999);
+    var btn = document.getElementById('copyArenaBtn');
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(ta.value).then(function() {
+            btn.textContent = '✓ Copiado';
+            setTimeout(function() { btn.textContent = 'Copiar'; }, 2000);
+        });
+    } else {
+        document.execCommand('copy');
+        btn.textContent = '✓ Copiado';
+        setTimeout(function() { btn.textContent = 'Copiar'; }, 2000);
+    }
+}
+
+/* ── API Debug modal ── */
+function openApiDebug(cardName) {
+    document.getElementById('apiDebugTitle').textContent = cardName;
+    document.getElementById('apiDebugBody').innerHTML = '<p style="color:var(--text-muted)">Consultando Scryfall…</p>';
+    document.getElementById('apiDebugModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    var base = 'https://api.scryfall.com';
+    var results = [];
+
+    function tryEndpoint(url, label) {
+        return fetch(url)
+            .then(function(r) {
+                return r.json().then(function(body) {
+                    results.push({ label: label, status: r.status, ok: r.ok, body: body });
+                    return r.ok;
+                });
+            });
+    }
+
+    tryEndpoint(base + '/cards/named?exact=' + encodeURIComponent(cardName),
+                'GET /cards/named?exact=' + cardName)
+    .then(function(found) {
+        if (found) { renderApiDebug(results); return Promise.resolve(); }
+        return tryEndpoint(base + '/cards/named?fuzzy=' + encodeURIComponent(cardName),
+                           'GET /cards/named?fuzzy=' + cardName)
+        .then(function(found2) {
+            if (found2) { renderApiDebug(results); return Promise.resolve(); }
+            return tryEndpoint(
+                base + '/cards/search?q=' + encodeURIComponent('!"' + cardName + '"') + '&unique=cards&order=released',
+                'GET /cards/search?q=!"' + cardName + '"')
+            .then(function() { renderApiDebug(results); });
+        });
+    })
+    .catch(function(err) {
+        document.getElementById('apiDebugBody').innerHTML =
+            '<p style="color:#f87171">Error de red: ' + err.message + '</p>';
+    });
+}
+
+function renderApiDebug(results) {
+    var html = results.map(function(r) {
+        return '<div class="api-result">' +
+            '<div class="api-result-header">' +
+            '<code>' + r.label + '</code>' +
+            '<span class="' + (r.ok ? 'api-status-ok' : 'api-status-err') + '">HTTP ' + r.status + '</span>' +
+            '</div>' +
+            '<pre class="api-pre">' + JSON.stringify(r.body, null, 2) + '</pre>' +
+            '</div>';
+    }).join('');
+    document.getElementById('apiDebugBody').innerHTML = html;
+}
+
+function closeApiDebug() {
+    document.getElementById('apiDebugModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+</script>
+
 <div th:replace="~{fragments/card-modal :: card-modal}"></div>
 <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
