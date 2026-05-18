@@ -13,4 +13,6 @@ public interface ManageDeckUseCase {
     Deck removeCard(Long deckId, Long entryId);
     Deck updateEntry(Long deckId, Long entryId, int quantity, boolean sideboard);
     void deleteDeck(Long id);
+    List<String> getImportFailures(Long deckId);
+    void clearImportFailures(Long deckId);
 }
