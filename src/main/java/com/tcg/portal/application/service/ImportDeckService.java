@@ -58,7 +58,6 @@ public class ImportDeckService implements ImportDeckUseCase {
                 log.info("Could not resolve card '{}' during import for deck {}", entry.name(), deckId);
                 failedNames.add(entry.name());
             }
-            sleepBriefly(); // be respectful to Scryfall rate limits
         }
 
         Deck saved = deckRepository.save(deck);
@@ -125,14 +124,6 @@ public class ImportDeckService implements ImportDeckUseCase {
                         e -> e.setQuantity(e.getQuantity() + quantity),
                         () -> deck.getEntries().add(new DeckEntry(null, card, quantity, sideboard))
                 );
-    }
-
-    private void sleepBriefly() {
-        try {
-            Thread.sleep(110); // ~9 req/s — within Scryfall's 10 req/s limit
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     private record ParsedEntry(String name, int quantity, boolean sideboard) {}
