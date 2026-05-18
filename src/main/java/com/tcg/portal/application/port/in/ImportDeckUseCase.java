@@ -16,5 +16,9 @@ public interface ImportDeckUseCase {
      *   2 Relic of Progenitus
      *   // comment lines are ignored
      */
-    ImportResult importFromList(Long deckId, String cardList);
+    ImportResult importFromList(Long deckId, String cardList, ImportProgressCallback onProgress);
+
+    default ImportResult importFromList(Long deckId, String cardList) {
+        return importFromList(deckId, cardList, (p, t, i, f) -> {});
+    }
 }

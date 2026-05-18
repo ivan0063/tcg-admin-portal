@@ -11,10 +11,15 @@
 
 <!-- Import status toast (managed by inline script below) -->
 <div id="importToast" class="import-toast" th:attr="data-deck-id=${deck.id}">
-    <span id="importToastMsg"></span>
-    <button type="button" class="import-toast-close"
-            onclick="document.getElementById('importToast').style.display='none'"
-            aria-label="Dismiss">&times;</button>
+    <div class="import-toast-row">
+        <span id="importToastMsg"></span>
+        <button type="button" class="import-toast-close"
+                onclick="document.getElementById('importToast').style.display='none'"
+                aria-label="Dismiss">&times;</button>
+    </div>
+    <div id="importProgressTrack" class="import-progress-track" style="display:none">
+        <div id="importProgressFill" class="import-progress-fill"></div>
+    </div>
 </div>
 
 <div class="page-container">
@@ -274,15 +279,34 @@ SB: 3 Relic of Progenitus</pre>
 </div>
 <script>
 (function () {
-    var toast    = document.getElementById('importToast');
-    var toastMsg = document.getElementById('importToastMsg');
-    var deckId   = toast.dataset.deckId;
-    var timer    = null;
+    var toast     = document.getElementById('importToast');
+    var toastMsg  = document.getElementById('importToastMsg');
+    var progTrack = document.getElementById('importProgressTrack');
+    var progFill  = document.getElementById('importProgressFill');
+    var deckId    = toast.dataset.deckId;
+    var timer     = null;
 
     function show(msg, cls) {
         toast.className = 'import-toast ' + cls;
         toastMsg.textContent = msg;
         toast.style.display = 'flex';
+    }
+
+    function showProgress(processed, total) {
+        progTrack.style.display = '';
+        if (total > 0) {
+            var pct = Math.min(100, Math.round(processed / total * 100));
+            progFill.style.width = pct + '%';
+            progFill.classList.remove('import-progress-fill-indeterminate');
+        } else {
+            progFill.style.width = '20%';
+            progFill.classList.add('import-progress-fill-indeterminate');
+        }
+    }
+
+    function hideProgress() {
+        progTrack.style.display = 'none';
+        progFill.classList.remove('import-progress-fill-indeterminate');
     }
 
     function stop() { if (timer) { clearInterval(timer); timer = null; } }
@@ -292,12 +316,25 @@ SB: 3 Relic of Progenitus</pre>
             .then(function (r) { return r.json(); })
             .then(function (d) {
                 if (d.state === 'PENDING') {
-                    show('Importando cartas… esto puede tardar un momento', 'import-toast-pending');
-                    if (!timer) timer = setInterval(check, 2500);
+                    var total     = d.total     || 0;
+                    var processed = d.processed || 0;
+                    var imported  = d.importedCount || 0;
+                    var failed    = d.failedCount   || 0;
+                    var msg;
+                    if (total > 0 && processed > 0) {
+                        msg = '⏳ ' + processed + '/' + total + ' · ' + imported + ' ok'
+                            + (failed > 0 ? ' · ' + failed + ' no encontradas' : '');
+                    } else {
+                        msg = 'Importando cartas… esto puede tardar un momento';
+                    }
+                    show(msg, 'import-toast-pending');
+                    showProgress(processed, total);
+                    if (!timer) timer = setInterval(check, 1000);
                 } else if (d.state === 'DONE') {
                     stop();
-                    var imp = d.importedCount || 0;
-                    var fail = d.failedCount  || 0;
+                    hideProgress();
+                    var imp  = d.importedCount || 0;
+                    var fail = d.failedCount   || 0;
                     if (fail === 0) {
                         show('✓ ' + imp + ' carta(s) importadas · recarga para verlas', 'import-toast-success');
                     } else {

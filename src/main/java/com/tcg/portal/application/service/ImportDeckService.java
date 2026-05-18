@@ -1,6 +1,7 @@
 package com.tcg.portal.application.service;
 
 import com.tcg.portal.application.port.in.ImportDeckUseCase;
+import com.tcg.portal.application.port.in.ImportProgressCallback;
 import com.tcg.portal.application.port.out.CardCachePort;
 import com.tcg.portal.application.port.out.CardSearchPort;
 import com.tcg.portal.application.port.out.DeckRepository;
@@ -41,11 +42,12 @@ public class ImportDeckService implements ImportDeckUseCase {
     }
 
     @Override
-    public ImportResult importFromList(Long deckId, String cardList) {
+    public ImportResult importFromList(Long deckId, String cardList, ImportProgressCallback onProgress) {
         Deck deck = deckRepository.findById(deckId)
                 .orElseThrow(() -> new DeckNotFoundException(deckId));
 
         List<ParsedEntry> entries = parse(cardList);
+        int total = entries.size();
         List<String> importedNames = new ArrayList<>();
         List<FailedCard> failedCards = new ArrayList<>();
 
@@ -60,6 +62,8 @@ public class ImportDeckService implements ImportDeckUseCase {
                 String diag = cardSearchPort.lastDiagnostics();
                 failedCards.add(new FailedCard(entry.name(), diag));
             }
+            onProgress.onCardProcessed(importedNames.size() + failedCards.size(), total,
+                    importedNames.size(), failedCards.size());
         }
 
         Deck saved = deckRepository.save(deck);

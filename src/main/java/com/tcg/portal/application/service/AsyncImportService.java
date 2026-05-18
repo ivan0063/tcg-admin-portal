@@ -27,11 +27,14 @@ public class AsyncImportService {
 
     @Async
     public void startImport(Long deckId, String cardList) {
-        jobStore.markPending(deckId);
+        int total = estimateCardCount(cardList);
+        jobStore.markPending(deckId, total);
         importFailureRepository.clearByDeckId(deckId);
-        log.info("Async import started for deck {}", deckId);
+        log.info("Async import started for deck {} ({} cards estimated)", deckId, total);
         try {
-            ImportResult result = importDeckUseCase.importFromList(deckId, cardList);
+            ImportResult result = importDeckUseCase.importFromList(deckId, cardList,
+                    (processed, t, imported, failed) ->
+                            jobStore.markProgress(deckId, processed, t, imported, failed));
             if (!result.failedCards().isEmpty()) {
                 importFailureRepository.saveFailures(deckId, result.failedCards());
             }
@@ -42,5 +45,19 @@ public class AsyncImportService {
             log.error("Async import failed for deck {}", deckId, e);
             jobStore.markDone(deckId, 0, 1, java.util.List.of("Import error: " + e.getMessage()));
         }
+    }
+
+    /** Quick pre-count of importable lines (no full parsing needed). */
+    private static int estimateCardCount(String cardList) {
+        if (cardList == null || cardList.isBlank()) return 0;
+        return (int) cardList.lines()
+                .map(String::trim)
+                .filter(l -> !l.isEmpty()
+                        && !l.startsWith("//")
+                        && !l.startsWith("#")
+                        && !l.equalsIgnoreCase("Sideboard:")
+                        && !l.equalsIgnoreCase("Sideboard")
+                        && !l.equalsIgnoreCase("Deck"))
+                .count();
     }
 }
