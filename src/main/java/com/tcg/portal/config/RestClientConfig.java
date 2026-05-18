@@ -1,5 +1,6 @@
 package com.tcg.portal.config;
 
+import com.tcg.portal.infrastructure.scryfall.ScryfallRateLimitInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,11 +13,12 @@ public class RestClientConfig {
     private String scryfallBaseUrl;
 
     @Bean
-    public RestClient scryfallRestClient() {
+    public RestClient scryfallRestClient(ScryfallRateLimitInterceptor rateLimiter) {
         return RestClient.builder()
                 .baseUrl(scryfallBaseUrl)
                 .defaultHeader("User-Agent", "TCGAdminPortal/1.0")
                 .defaultHeader("Accept", "application/json")
+                .requestInterceptor(rateLimiter)
                 .build();
     }
 }

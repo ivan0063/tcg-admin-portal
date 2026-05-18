@@ -5,8 +5,11 @@ import com.tcg.portal.application.port.in.ManageDeckUseCase;
 import com.tcg.portal.application.service.AsyncImportService;
 import com.tcg.portal.application.service.ImportJob;
 import com.tcg.portal.application.service.ImportJobStore;
+import com.tcg.portal.domain.model.Deck;
 import com.tcg.portal.domain.model.DeckFormat;
+import com.tcg.portal.domain.model.FailedCard;
 import org.springframework.http.MediaType;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -73,11 +76,36 @@ public class DeckController {
         model.addAttribute("pageTitle", deck.getName());
 
         model.addAttribute("importFailures", deckUseCase.getImportFailures(id));
+        model.addAttribute("arenaText", buildArenaText(deck));
 
         if (q != null && !q.isBlank()) {
             model.addAttribute("searchResults", cardSearchUseCase.searchCards(q));
         }
         return "decks/detail";
+    }
+
+    private static String buildArenaText(Deck deck) {
+        var sb = new StringBuilder("Deck\n");
+        deck.getMainboard().forEach(e ->
+                sb.append(e.getQuantity()).append(" ").append(e.getCard().name()).append("\n"));
+        if (!deck.getSideboard().isEmpty()) {
+            sb.append("\nSideboard\n");
+            deck.getSideboard().forEach(e ->
+                    sb.append(e.getQuantity()).append(" ").append(e.getCard().name()).append("\n"));
+        }
+        return sb.toString().stripTrailing();
+    }
+
+    @PostMapping("/{id}/import-failures/retry")
+    public String retryImportFailures(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        List<FailedCard> failed = deckUseCase.getImportFailures(id);
+        if (failed.isEmpty()) {
+            return "redirect:/decks/" + id;
+        }
+        String cardList = String.join("\n", failed.stream().map(f -> "1 " + f.name()).toList());
+        asyncImportService.startImport(id, cardList);
+        redirectAttributes.addFlashAttribute("importPending", true);
+        return "redirect:/decks/" + id;
     }
 
     @PostMapping("/{id}/import-failures/clear")

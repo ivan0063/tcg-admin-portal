@@ -20,6 +20,9 @@ public class DeckImportFailureEntity {
     @Column(name = "failed_at", nullable = false)
     private LocalDateTime failedAt;
 
+    @Column(name = "diagnostics", columnDefinition = "TEXT")
+    private String diagnostics;
+
     public DeckImportFailureEntity() {}
 
     public Long getId() { return id; }
@@ -30,4 +33,6 @@ public class DeckImportFailureEntity {
     public void setCardName(String cardName) { this.cardName = cardName; }
     public LocalDateTime getFailedAt() { return failedAt; }
     public void setFailedAt(LocalDateTime failedAt) { this.failedAt = failedAt; }
+    public String getDiagnostics() { return diagnostics; }
+    public void setDiagnostics(String diagnostics) { this.diagnostics = diagnostics; }
 }

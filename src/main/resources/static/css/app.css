@@ -848,3 +848,72 @@ details[open] > .import-summary::before { transform: rotate(90deg); }
     .btn-ghost { min-height: 42px; }
     .btn-sm-icon { min-height: 38px; min-width: 38px; justify-content: center; }
 }
+
+/* ===== UTILITY MODALS (arena export, api debug) ===== */
+.util-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    z-index: 1100;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
+}
+.util-overlay.open { display: flex; }
+.util-dialog {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 680px;
+    margin: auto;
+}
+.util-dialog-header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+.util-dialog-header h3 { margin: 0; font-size: 1rem; flex: 1; }
+.util-close {
+    background: none; border: none; font-size: 1.4rem; cursor: pointer;
+    color: var(--text-muted); line-height: 1; padding: 0 .25rem; flex-shrink: 0;
+}
+.util-close:hover { color: var(--text); }
+.util-textarea {
+    width: 100%;
+    background: var(--bg-surface, #111);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: monospace;
+    font-size: .82rem;
+    padding: .75rem;
+    resize: vertical;
+    box-sizing: border-box;
+}
+.api-result { margin-bottom: 1rem; }
+.api-result-header {
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    margin-bottom: .35rem;
+    flex-wrap: wrap;
+}
+.api-result-header code { font-size: .78rem; color: var(--primary); word-break: break-all; flex: 1; }
+.api-status-ok  { font-weight: 700; color: #4ade80; white-space: nowrap; }
+.api-status-err { font-weight: 700; color: #f87171; white-space: nowrap; }
+.api-pre {
+    background: var(--bg-surface, #0d0d0d);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .75rem;
+    overflow: auto;
+    font-size: .73rem;
+    max-height: 220px;
+    margin: 0;
+    white-space: pre;
+}

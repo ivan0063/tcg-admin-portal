@@ -8,6 +8,7 @@ import com.tcg.portal.domain.exception.DeckNotFoundException;
 import com.tcg.portal.domain.model.Card;
 import com.tcg.portal.domain.model.Deck;
 import com.tcg.portal.domain.model.DeckEntry;
+import com.tcg.portal.domain.model.FailedCard;
 import com.tcg.portal.domain.model.ImportResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class ImportDeckService implements ImportDeckUseCase {
 
         List<ParsedEntry> entries = parse(cardList);
         List<String> importedNames = new ArrayList<>();
-        List<String> failedNames = new ArrayList<>();
+        List<FailedCard> failedCards = new ArrayList<>();
 
         for (ParsedEntry entry : entries) {
             Optional<Card> resolved = resolveCard(entry.name());
@@ -56,13 +57,13 @@ public class ImportDeckService implements ImportDeckUseCase {
                 importedNames.add(card.name());
             } else {
                 log.info("Could not resolve card '{}' during import for deck {}", entry.name(), deckId);
-                failedNames.add(entry.name());
+                String diag = cardSearchPort.lastDiagnostics();
+                failedCards.add(new FailedCard(entry.name(), diag));
             }
-            sleepBriefly(); // be respectful to Scryfall rate limits
         }
 
         Deck saved = deckRepository.save(deck);
-        return new ImportResult(saved, importedNames, failedNames);
+        return new ImportResult(saved, importedNames, failedCards);
     }
 
     // ── Parsing ─────────────────────────────────────────────────
@@ -125,14 +126,6 @@ public class ImportDeckService implements ImportDeckUseCase {
                         e -> e.setQuantity(e.getQuantity() + quantity),
                         () -> deck.getEntries().add(new DeckEntry(null, card, quantity, sideboard))
                 );
-    }
-
-    private void sleepBriefly() {
-        try {
-            Thread.sleep(110); // ~9 req/s — within Scryfall's 10 req/s limit
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     private record ParsedEntry(String name, int quantity, boolean sideboard) {}

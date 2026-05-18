@@ -1,6 +1,7 @@
 package com.tcg.portal.infrastructure.persistence.adapter;
 
 import com.tcg.portal.application.port.out.ImportFailureRepository;
+import com.tcg.portal.domain.model.FailedCard;
 import com.tcg.portal.infrastructure.persistence.entity.DeckImportFailureEntity;
 import com.tcg.portal.infrastructure.persistence.jpa.ImportFailureJpaRepository;
 import org.springframework.stereotype.Component;
@@ -21,21 +22,22 @@ public class ImportFailureJpaAdapter implements ImportFailureRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public List<String> findCardNamesByDeckId(Long deckId) {
+    public List<FailedCard> findFailuresByDeckId(Long deckId) {
         return repo.findByDeckIdOrderByFailedAtAsc(deckId).stream()
-                .map(DeckImportFailureEntity::getCardName)
+                .map(e -> new FailedCard(e.getCardName(), e.getDiagnostics()))
                 .toList();
     }
 
     @Override
-    public void saveFailures(Long deckId, List<String> cardNames) {
+    public void saveFailures(Long deckId, List<FailedCard> cards) {
         LocalDateTime now = LocalDateTime.now();
-        List<DeckImportFailureEntity> entities = cardNames.stream()
-                .map(name -> {
+        List<DeckImportFailureEntity> entities = cards.stream()
+                .map(fc -> {
                     var e = new DeckImportFailureEntity();
                     e.setDeckId(deckId);
-                    e.setCardName(name);
+                    e.setCardName(fc.name());
                     e.setFailedAt(now);
+                    e.setDiagnostics(fc.diagnosticsJson());
                     return e;
                 })
                 .toList();
