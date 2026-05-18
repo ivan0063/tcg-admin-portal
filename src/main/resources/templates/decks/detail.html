@@ -234,9 +234,14 @@ SB: 3 Relic of Progenitus</pre>
         <div class="deck-section-header">
             <h3>&#9888; No encontradas</h3>
             <span class="count-badge" th:text="${#lists.size(importFailures)} + ' cartas'">0 cartas</span>
-            <form th:action="@{/decks/{id}/import-failures/clear(id=${deck.id})}" method="post" style="margin-left:auto">
-                <button type="submit" class="btn-ghost" style="font-size:.8rem;padding:.3rem .65rem">&#10005; Limpiar lista</button>
-            </form>
+            <div style="display:flex;gap:.4rem;margin-left:auto">
+                <form th:action="@{/decks/{id}/import-failures/retry(id=${deck.id})}" method="post">
+                    <button type="submit" class="btn-primary-tcg" style="font-size:.8rem;padding:.3rem .75rem">&#8635; Reintentar</button>
+                </form>
+                <form th:action="@{/decks/{id}/import-failures/clear(id=${deck.id})}" method="post">
+                    <button type="submit" class="btn-ghost" style="font-size:.8rem;padding:.3rem .65rem">&#10005; Limpiar</button>
+                </form>
+            </div>
         </div>
         <div class="table-scroll" style="margin-bottom:1.5rem">
             <table class="collection-table">

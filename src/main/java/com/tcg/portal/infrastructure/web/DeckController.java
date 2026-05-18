@@ -7,6 +7,7 @@ import com.tcg.portal.application.service.ImportJob;
 import com.tcg.portal.application.service.ImportJobStore;
 import com.tcg.portal.domain.model.DeckFormat;
 import org.springframework.http.MediaType;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -78,6 +79,19 @@ public class DeckController {
             model.addAttribute("searchResults", cardSearchUseCase.searchCards(q));
         }
         return "decks/detail";
+    }
+
+    @PostMapping("/{id}/import-failures/retry")
+    public String retryImportFailures(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        List<String> failed = deckUseCase.getImportFailures(id);
+        if (failed.isEmpty()) {
+            return "redirect:/decks/" + id;
+        }
+        // Build card-list text from the stored names (qty=1, mainboard)
+        String cardList = String.join("\n", failed.stream().map(n -> "1 " + n).toList());
+        asyncImportService.startImport(id, cardList);
+        redirectAttributes.addFlashAttribute("importPending", true);
+        return "redirect:/decks/" + id;
     }
 
     @PostMapping("/{id}/import-failures/clear")

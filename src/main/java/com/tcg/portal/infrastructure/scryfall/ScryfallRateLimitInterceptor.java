@@ -23,7 +23,7 @@ public class ScryfallRateLimitInterceptor implements ClientHttpRequestIntercepto
 
     private static final Logger log = LoggerFactory.getLogger(ScryfallRateLimitInterceptor.class);
 
-    private static final long MIN_INTERVAL_MS = 110;   // ~9 req/s — safely below 10 req/s
+    private static final long MIN_INTERVAL_MS = 250;   // 4 req/s — conservative, async imports can afford to wait
     private static final int  MAX_RETRIES     = 3;
 
     private final AtomicLong lastRequestMs = new AtomicLong(0);
