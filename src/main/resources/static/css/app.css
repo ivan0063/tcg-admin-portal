@@ -518,44 +518,6 @@ details[open] > .import-summary::before { transform: rotate(90deg); }
     font-size: .85rem;
 }
 
-/* ===== IMPORT FAILURE BANNER ===== */
-.import-failure-banner {
-    background: #431407;
-    border: 1px solid #f9731644;
-    border-radius: 10px;
-    padding: .85rem 1.1rem;
-    margin-bottom: 1.25rem;
-    color: #fdba74;
-}
-
-.import-failure-banner > summary {
-    cursor: pointer;
-    font-weight: 600;
-    font-size: .9rem;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    user-select: none;
-}
-.import-failure-banner > summary::-webkit-details-marker { display: none; }
-.import-failure-banner > summary::after {
-    content: "▼ see list";
-    font-size: .75rem;
-    color: #fb923c;
-    font-weight: 400;
-    margin-left: auto;
-}
-details[open].import-failure-banner > summary::after { content: "▲ hide list"; }
-
-.failed-cards-list {
-    margin: .75rem 0 0 1.25rem;
-    padding: 0;
-    font-size: .85rem;
-    color: #fca5a5;
-    line-height: 1.8;
-}
-
 /* ===== ALERTS ===== */
 .alert-success {
     background: #14532d33;
@@ -678,7 +640,7 @@ details[open].import-failure-banner > summary::after { content: "▲ hide list";
     top: 4rem;
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
+    display: none;
     align-items: center;
     gap: .75rem;
     padding: .6rem 1rem .6rem 1.1rem;
@@ -690,11 +652,6 @@ details[open].import-failure-banner > summary::after { content: "▲ hide list";
     z-index: 900;
     box-shadow: 0 4px 18px rgba(0,0,0,.35);
     max-width: calc(100vw - 2rem);
-    animation: toastIn .2s ease;
-}
-@keyframes toastIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
-    to   { opacity: 1; transform: translateX(-50%); }
 }
 .import-toast-pending { border-color: var(--primary); color: var(--text-muted); }
 .import-toast-success { background: #14532d; border-color: #22c55e; color: #4ade80; }

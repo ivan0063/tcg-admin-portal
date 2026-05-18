@@ -9,10 +9,12 @@
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-<!-- Import status toast (managed by importPoller.js inline below) -->
-<div id="importToast" class="import-toast" hidden th:attr="data-deck-id=${deck.id}">
+<!-- Import status toast (managed by inline script below) -->
+<div id="importToast" class="import-toast" th:attr="data-deck-id=${deck.id}">
     <span id="importToastMsg"></span>
-    <button type="button" class="import-toast-close" onclick="document.getElementById('importToast').hidden=true" aria-label="Dismiss">&times;</button>
+    <button type="button" class="import-toast-close"
+            onclick="document.getElementById('importToast').style.display='none'"
+            aria-label="Dismiss">&times;</button>
 </div>
 
 <div class="page-container">
@@ -60,21 +62,6 @@
 
     <!-- ── Success flash ── -->
     <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
-
-    <!-- ── Persistent import failures ── -->
-    <div th:if="${not #lists.isEmpty(importFailures)}" class="import-failure-banner">
-        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            <span style="font-weight:600;font-size:.9rem">
-                &#9888; <span th:text="${#lists.size(importFailures)}">0</span> carta(s) no encontradas en el último import
-            </span>
-            <form th:action="@{/decks/{id}/import-failures/clear(id=${deck.id})}" method="post" style="margin-left:auto">
-                <button type="submit" class="btn-ghost" style="font-size:.8rem;padding:.3rem .65rem">&#10005; Limpiar</button>
-            </form>
-        </div>
-        <ul class="failed-cards-list">
-            <li th:each="cardName : ${importFailures}" th:text="${cardName}">Card name</li>
-        </ul>
-    </div>
 
     <!-- ── Card search ── -->
     <div class="search-section">
@@ -204,7 +191,7 @@ SB: 3 Relic of Progenitus</pre>
     <div th:if="${#lists.isEmpty(deck.sideboard)}" class="empty-state" style="padding:1.5rem">
         <p style="color:var(--text-dim);font-size:.9rem">No sideboard cards yet.</p>
     </div>
-    <div th:if="${not #lists.isEmpty(deck.sideboard)}" class="table-scroll">
+    <div th:if="${not #lists.isEmpty(deck.sideboard)}" class="table-scroll" style="margin-bottom:1.5rem">
         <table class="collection-table">
             <thead>
             <tr>
@@ -242,6 +229,35 @@ SB: 3 Relic of Progenitus</pre>
         </table>
     </div>
 
+    <!-- ── No encontradas ── -->
+    <div th:if="${not #lists.isEmpty(importFailures)}">
+        <div class="deck-section-header">
+            <h3>&#9888; No encontradas</h3>
+            <span class="count-badge" th:text="${#lists.size(importFailures)} + ' cartas'">0 cartas</span>
+            <form th:action="@{/decks/{id}/import-failures/clear(id=${deck.id})}" method="post" style="margin-left:auto">
+                <button type="submit" class="btn-ghost" style="font-size:.8rem;padding:.3rem .65rem">&#10005; Limpiar lista</button>
+            </form>
+        </div>
+        <div class="table-scroll" style="margin-bottom:1.5rem">
+            <table class="collection-table">
+                <thead>
+                <tr>
+                    <th>Carta</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cardName : ${importFailures}">
+                    <td style="font-weight:600;font-size:.875rem;color:var(--text-muted)" th:text="${cardName}">Nombre</td>
+                    <td style="text-align:right">
+                        <a th:href="@{/decks/{id}(id=${deck.id},q=${cardName})}" class="btn-sm-icon">&#128269; Buscar</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 <script>
 (function () {
@@ -253,7 +269,7 @@ SB: 3 Relic of Progenitus</pre>
     function show(msg, cls) {
         toast.className = 'import-toast ' + cls;
         toastMsg.textContent = msg;
-        toast.hidden = false;
+        toast.style.display = 'flex';
     }
 
     function stop() { if (timer) { clearInterval(timer); timer = null; } }
