@@ -136,6 +136,17 @@ SB: 3 Relic of Progenitus</pre>
                   style="margin-top:.75rem;display:flex;flex-direction:column;gap:.75rem">
                 <textarea name="cardList" class="tcg-textarea import-textarea"
                           placeholder="4 Lightning Bolt&#10;3 Goblin Guide&#10;..." required></textarea>
+                <div th:if="${not #lists.isEmpty(collections)}"
+                     style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+                    <label style="display:flex;align-items:center;gap:.4rem;font-size:.83rem;color:var(--text-muted);cursor:pointer">
+                        <input type="checkbox" id="importCollCheck" onchange="toggleCollSelect(this)">
+                        También agregar a colección
+                    </label>
+                    <select name="targetCollectionId" id="importCollSelect" disabled class="tcg-input"
+                            style="font-size:.8rem;padding:.3rem .5rem">
+                        <option th:each="col : ${collections}" th:value="${col.id}" th:text="${col.name}"></option>
+                    </select>
+                </div>
                 <div style="display:flex;justify-content:flex-end">
                     <button type="submit" class="btn-primary-tcg">&#128194; Import Cards</button>
                 </div>
@@ -173,16 +184,26 @@ SB: 3 Relic of Progenitus</pre>
                     <span th:if="${entry.card.smallImageUri == null}"
                           style="font-size:1.5rem;color:var(--text-dim)">&#9670;</span>
                 </td>
-                <td style="font-weight:600;font-size:.875rem" th:text="${entry.card.name}">Name</td>
+                <td style="font-weight:600;font-size:.875rem">
+                    <span th:text="${entry.card.name}">Name</span>
+                    <span th:if="${ownedScryfallIds.contains(entry.card.scryfallId())}"
+                          class="owned-badge" title="En tu colección">&#10003;</span>
+                </td>
                 <td style="color:var(--text-muted);font-size:.8rem" th:text="${entry.card.typeLine}">Type</td>
                 <td class="mana-cost" th:text="${entry.card.manaCost}"></td>
                 <td style="font-weight:600" th:text="${entry.quantity}">1</td>
                 <td class="card-price" th:text="${entry.card.displayPrice()}"></td>
-                <td>
-                    <form th:action="@{/decks/{id}/cards/{entryId}/remove(id=${deck.id},entryId=${entry.id})}"
-                          method="post" onsubmit="return confirm('Remove?')">
-                        <button type="submit" class="btn-danger-tcg">&#128465;</button>
-                    </form>
+                <td style="white-space:nowrap">
+                    <div style="display:flex;gap:.25rem;justify-content:flex-end">
+                        <button type="button" class="btn-sm-icon"
+                                th:attr="data-sid=${entry.card.scryfallId()},data-name=${entry.card.name()}"
+                                onclick="openCollectModal(this.dataset.sid, this.dataset.name)"
+                                title="Agregar a colección">&#10133;</button>
+                        <form th:action="@{/decks/{id}/cards/{entryId}/remove(id=${deck.id},entryId=${entry.id})}"
+                              method="post" onsubmit="return confirm('Remove?')">
+                            <button type="submit" class="btn-danger-tcg">&#128465;</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             </tbody>
@@ -219,16 +240,26 @@ SB: 3 Relic of Progenitus</pre>
                     <span th:if="${entry.card.smallImageUri == null}"
                           style="font-size:1.5rem;color:var(--text-dim)">&#9670;</span>
                 </td>
-                <td style="font-weight:600;font-size:.875rem" th:text="${entry.card.name}">Name</td>
+                <td style="font-weight:600;font-size:.875rem">
+                    <span th:text="${entry.card.name}">Name</span>
+                    <span th:if="${ownedScryfallIds.contains(entry.card.scryfallId())}"
+                          class="owned-badge" title="En tu colección">&#10003;</span>
+                </td>
                 <td style="color:var(--text-muted);font-size:.8rem" th:text="${entry.card.typeLine}">Type</td>
                 <td class="mana-cost" th:text="${entry.card.manaCost}"></td>
                 <td style="font-weight:600" th:text="${entry.quantity}">1</td>
                 <td class="card-price" th:text="${entry.card.displayPrice()}"></td>
-                <td>
-                    <form th:action="@{/decks/{id}/cards/{entryId}/remove(id=${deck.id},entryId=${entry.id})}"
-                          method="post" onsubmit="return confirm('Remove?')">
-                        <button type="submit" class="btn-danger-tcg">&#128465;</button>
-                    </form>
+                <td style="white-space:nowrap">
+                    <div style="display:flex;gap:.25rem;justify-content:flex-end">
+                        <button type="button" class="btn-sm-icon"
+                                th:attr="data-sid=${entry.card.scryfallId()},data-name=${entry.card.name()}"
+                                onclick="openCollectModal(this.dataset.sid, this.dataset.name)"
+                                title="Agregar a colección">&#10133;</button>
+                        <form th:action="@{/decks/{id}/cards/{entryId}/remove(id=${deck.id},entryId=${entry.id})}"
+                              method="post" onsubmit="return confirm('Remove?')">
+                            <button type="submit" class="btn-danger-tcg">&#128465;</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             </tbody>
@@ -350,6 +381,43 @@ SB: 3 Relic of Progenitus</pre>
     check();
 }());
 </script>
+<!-- ── Add to Collection Modal ── -->
+<div id="collectModal" class="util-overlay" onclick="if(event.target===this)closeCollectModal()">
+    <div class="util-dialog" style="max-width:340px">
+        <div class="util-dialog-header">
+            <h3>&#10133; Agregar a colección</h3>
+            <button class="util-close" onclick="closeCollectModal()" aria-label="Cerrar">&times;</button>
+        </div>
+        <p id="collectCardName" style="font-weight:600;color:var(--primary);margin:0 0 1.1rem;font-size:.9rem"></p>
+        <form th:action="@{/decks/{id}/collect(id=${deck.id})}" method="post">
+            <input type="hidden" name="scryfallId" id="collectScryfallId">
+            <div th:if="${#lists.isEmpty(collections)}"
+                 style="color:var(--text-dim);font-size:.85rem;margin-bottom:.75rem">
+                No tienes colecciones aún.
+                <a th:href="@{/collections/new}" style="color:var(--primary)">Crear una</a>
+            </div>
+            <div th:if="${not #lists.isEmpty(collections)}"
+                 style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.1rem">
+                <div>
+                    <label style="font-size:.8rem;color:var(--text-muted);display:block;margin-bottom:.3rem">Colección</label>
+                    <select name="collectionId" class="tcg-input">
+                        <option th:each="col : ${collections}" th:value="${col.id}" th:text="${col.name}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:.8rem;color:var(--text-muted);display:block;margin-bottom:.3rem">Cantidad</label>
+                    <input type="number" name="quantity" value="1" min="1" max="99"
+                           class="tcg-input" style="width:80px">
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:.5rem">
+                <button th:if="${not #lists.isEmpty(collections)}" type="submit" class="btn-primary-tcg">Agregar</button>
+                <button type="button" class="btn-ghost" onclick="closeCollectModal()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- ── Arena Export Modal ── -->
 <div id="arenaModal" class="util-overlay" onclick="if(event.target===this)closeArenaModal()">
     <div class="util-dialog">
@@ -385,6 +453,25 @@ SB: 3 Relic of Progenitus</pre>
 </div>
 
 <script>
+/* ── Collect modal ── */
+function openCollectModal(scryfallId, cardName) {
+    document.getElementById('collectScryfallId').value = scryfallId;
+    document.getElementById('collectCardName').textContent = cardName;
+    document.getElementById('collectModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeCollectModal() {
+    document.getElementById('collectModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+/* ── Bulk import collection toggle ── */
+function toggleCollSelect(cb) {
+    var sel = document.getElementById('importCollSelect');
+    sel.disabled = !cb.checked;
+    if (!cb.checked) sel.selectedIndex = 0;
+}
+
 /* ── Arena modal ── */
 function openArenaModal() {
     document.getElementById('arenaModal').classList.add('open');

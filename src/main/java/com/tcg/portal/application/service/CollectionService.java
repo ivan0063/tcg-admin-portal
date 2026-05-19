@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -44,6 +45,12 @@ public class CollectionService implements ManageCollectionUseCase {
     public Collection getCollection(Long id) {
         return collectionRepository.findById(id)
                 .orElseThrow(() -> new CollectionNotFoundException(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<String> getOwnedScryfallIds() {
+        return collectionRepository.findAllOwnedScryfallIds();
     }
 
     @Override

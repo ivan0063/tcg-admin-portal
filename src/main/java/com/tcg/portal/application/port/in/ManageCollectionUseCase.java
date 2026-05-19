@@ -4,9 +4,11 @@ import com.tcg.portal.domain.model.CardCondition;
 import com.tcg.portal.domain.model.Collection;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ManageCollectionUseCase {
     List<Collection> getAllCollections();
+    Set<String> getOwnedScryfallIds();
     Collection getCollection(Long id);
     Collection createCollection(String name, String description);
     Collection addCard(Long collectionId, String scryfallId, int quantity, CardCondition condition, boolean foil);

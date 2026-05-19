@@ -48,7 +48,7 @@ public class ImportDeckService implements ImportDeckUseCase {
 
         List<ParsedEntry> entries = parse(cardList);
         int total = entries.size();
-        List<String> importedNames = new ArrayList<>();
+        List<Card> importedCards = new ArrayList<>();
         List<FailedCard> failedCards = new ArrayList<>();
 
         for (ParsedEntry entry : entries) {
@@ -56,18 +56,18 @@ public class ImportDeckService implements ImportDeckUseCase {
             if (resolved.isPresent()) {
                 Card card = resolved.get();
                 addToDeck(deck, card, entry.quantity(), entry.sideboard());
-                importedNames.add(card.name());
+                importedCards.add(card);
             } else {
                 log.info("Could not resolve card '{}' during import for deck {}", entry.name(), deckId);
                 String diag = cardSearchPort.lastDiagnostics();
                 failedCards.add(new FailedCard(entry.name(), diag));
             }
-            onProgress.onCardProcessed(importedNames.size() + failedCards.size(), total,
-                    importedNames.size(), failedCards.size());
+            onProgress.onCardProcessed(importedCards.size() + failedCards.size(), total,
+                    importedCards.size(), failedCards.size());
         }
 
         Deck saved = deckRepository.save(deck);
-        return new ImportResult(saved, importedNames, failedCards);
+        return new ImportResult(saved, importedCards, failedCards);
     }
 
     // ── Parsing ─────────────────────────────────────────────────
