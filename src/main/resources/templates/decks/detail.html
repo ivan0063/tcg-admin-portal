@@ -154,10 +154,30 @@ SB: 3 Relic of Progenitus</pre>
         </div>
     </details>
 
+    <!-- ── Deck filters ── -->
+    <div th:if="${not #lists.isEmpty(deck.mainboard) or not #lists.isEmpty(deck.sideboard)}"
+         class="deck-filters">
+        <input type="text" id="filterName" class="tcg-input deck-filter-input"
+               placeholder="&#128269; Nombre…" oninput="applyFilters()">
+        <select id="filterSet" class="tcg-input deck-filter-select" onchange="applyFilters()">
+            <option value="">Todos los sets</option>
+        </select>
+        <select id="filterType" class="tcg-input deck-filter-select" onchange="applyFilters()">
+            <option value="">Todos los tipos</option>
+        </select>
+        <select id="filterOwned" class="tcg-input deck-filter-select" onchange="applyFilters()">
+            <option value="">Tengo / Faltan</option>
+            <option value="true">&#10003; Tengo</option>
+            <option value="false">&#9711; Faltan</option>
+        </select>
+        <button type="button" class="btn-ghost" id="clearFiltersBtn"
+                onclick="clearFilters()" style="display:none;white-space:nowrap">&#10005; Limpiar</button>
+    </div>
+
     <!-- ── Mainboard ── -->
     <div class="deck-section-header">
         <h3>Mainboard</h3>
-        <span class="count-badge" th:text="${deck.mainboardCount} + ' cards'">0 cards</span>
+        <span id="mainboard-count-badge" class="count-badge" th:text="${deck.mainboardCount} + ' cards'">0 cards</span>
     </div>
     <div th:if="${#lists.isEmpty(deck.mainboard)}" class="empty-state" style="padding:1.5rem">
         <p style="color:var(--text-dim);font-size:.9rem">No mainboard cards yet.</p>
@@ -177,7 +197,9 @@ SB: 3 Relic of Progenitus</pre>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="entry : ${deck.mainboard}">
+            <tr class="deck-card-row" data-board="main"
+                th:attr="data-name=${entry.card.name()},data-set=${entry.card.setCode()},data-setname=${entry.card.setName()},data-type=${entry.card.typeLine()},data-owned=${ownedScryfallIds.contains(entry.card.scryfallId())}"
+                th:each="entry : ${deck.mainboard}">
                 <td>
                     <img th:if="${entry.card.smallImageUri != null}"
                          th:src="${entry.card.smallImageUri}"
@@ -211,6 +233,11 @@ SB: 3 Relic of Progenitus</pre>
                     </div>
                 </td>
             </tr>
+            <tr id="no-results-main" style="display:none">
+                <td colspan="8" style="text-align:center;color:var(--text-dim);padding:1.25rem;font-size:.875rem">
+                    Sin resultados para los filtros aplicados.
+                </td>
+            </tr>
             </tbody>
         </table>
     </div>
@@ -218,7 +245,7 @@ SB: 3 Relic of Progenitus</pre>
     <!-- ── Sideboard ── -->
     <div class="deck-section-header">
         <h3>Sideboard</h3>
-        <span class="count-badge" th:text="${deck.sideboardCount} + ' cards'">0 cards</span>
+        <span id="sideboard-count-badge" class="count-badge" th:text="${deck.sideboardCount} + ' cards'">0 cards</span>
     </div>
     <div th:if="${#lists.isEmpty(deck.sideboard)}" class="empty-state" style="padding:1.5rem">
         <p style="color:var(--text-dim);font-size:.9rem">No sideboard cards yet.</p>
@@ -238,7 +265,9 @@ SB: 3 Relic of Progenitus</pre>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="entry : ${deck.sideboard}">
+            <tr class="deck-card-row" data-board="side"
+                th:attr="data-name=${entry.card.name()},data-set=${entry.card.setCode()},data-setname=${entry.card.setName()},data-type=${entry.card.typeLine()},data-owned=${ownedScryfallIds.contains(entry.card.scryfallId())}"
+                th:each="entry : ${deck.sideboard}">
                 <td>
                     <img th:if="${entry.card.smallImageUri != null}"
                          th:src="${entry.card.smallImageUri}"
@@ -270,6 +299,11 @@ SB: 3 Relic of Progenitus</pre>
                             <button type="submit" class="btn-danger-tcg">&#128465;</button>
                         </form>
                     </div>
+                </td>
+            </tr>
+            <tr id="no-results-side" style="display:none">
+                <td colspan="8" style="text-align:center;color:var(--text-dim);padding:1.25rem;font-size:.875rem">
+                    Sin resultados para los filtros aplicados.
                 </td>
             </tr>
             </tbody>
@@ -557,6 +591,80 @@ function closeApiDebug() {
     document.getElementById('apiDebugModal').classList.remove('open');
     document.body.style.overflow = '';
 }
+
+/* ── Deck table filters ── */
+(function () {
+    function populateDropdowns() {
+        var sets = new Map();
+        var types = new Set();
+        document.querySelectorAll('.deck-card-row').forEach(function (row) {
+            var code = (row.dataset.set || '').toUpperCase();
+            var name = row.dataset.setname || code;
+            if (code) sets.set(code, name);
+            var typeLine = row.dataset.type || '';
+            ['Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Land','Battle'].forEach(function (t) {
+                if (typeLine.includes(t)) types.add(t);
+            });
+        });
+        var setEl = document.getElementById('filterSet');
+        if (!setEl) return;
+        Array.from(sets.entries()).sort(function (a, b) { return a[1].localeCompare(b[1]); }).forEach(function (e) {
+            var o = document.createElement('option');
+            o.value = e[0].toLowerCase();
+            o.textContent = e[0] + ' — ' + e[1];
+            setEl.appendChild(o);
+        });
+        var typeEl = document.getElementById('filterType');
+        Array.from(types).sort().forEach(function (t) {
+            var o = document.createElement('option');
+            o.value = t.toLowerCase();
+            o.textContent = t;
+            typeEl.appendChild(o);
+        });
+    }
+
+    function applyFilters() {
+        var name  = (document.getElementById('filterName').value  || '').toLowerCase().trim();
+        var set   = (document.getElementById('filterSet').value   || '').toLowerCase();
+        var type  = (document.getElementById('filterType').value  || '').toLowerCase();
+        var owned = document.getElementById('filterOwned').value;
+        var active = name || set || type || owned;
+        var clearBtn = document.getElementById('clearFiltersBtn');
+        if (clearBtn) clearBtn.style.display = active ? '' : 'none';
+
+        var counts = { main: 0, side: 0 };
+        document.querySelectorAll('.deck-card-row').forEach(function (row) {
+            var ok = true;
+            if (name  && !(row.dataset.name  || '').toLowerCase().includes(name))  ok = false;
+            if (set   && !(row.dataset.set   || '').toLowerCase().includes(set))   ok = false;
+            if (type  && !(row.dataset.type  || '').toLowerCase().includes(type))  ok = false;
+            if (owned && row.dataset.owned !== owned) ok = false;
+            row.style.display = ok ? '' : 'none';
+            if (ok) counts[row.dataset.board === 'main' ? 'main' : 'side']++;
+        });
+
+        ['main', 'side'].forEach(function (b) {
+            var nr = document.getElementById('no-results-' + b);
+            if (nr) nr.style.display = (active && counts[b] === 0) ? '' : 'none';
+        });
+        var mb = document.getElementById('mainboard-count-badge');
+        var sb = document.getElementById('sideboard-count-badge');
+        if (mb) mb.textContent = counts.main + ' cards';
+        if (sb) sb.textContent = counts.side + ' cards';
+    }
+
+    function clearFilters() {
+        ['filterName','filterSet','filterType','filterOwned'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        applyFilters();
+    }
+
+    window.applyFilters  = applyFilters;
+    window.clearFilters  = clearFilters;
+    populateDropdowns();
+}());
 </script>
 
 <div th:replace="~{fragments/card-modal :: card-modal}"></div>
