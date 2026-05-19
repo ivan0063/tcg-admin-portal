@@ -168,6 +168,7 @@ SB: 3 Relic of Progenitus</pre>
             <tr>
                 <th style="width:44px"></th>
                 <th>Card</th>
+                <th>Set</th>
                 <th>Type</th>
                 <th>Cost</th>
                 <th>Qty</th>
@@ -188,6 +189,10 @@ SB: 3 Relic of Progenitus</pre>
                     <span th:text="${entry.card.name}">Name</span>
                     <span th:if="${ownedScryfallIds.contains(entry.card.scryfallId())}"
                           class="owned-badge" title="En tu colección">&#10003;</span>
+                </td>
+                <td style="font-size:.75rem;color:var(--text-muted)">
+                    <span class="set-code-badge" th:text="${entry.card.setCode()}"></span>
+                    <span th:text="${entry.card.setName()}" style="display:block;font-size:.7rem;color:var(--text-dim)"></span>
                 </td>
                 <td style="color:var(--text-muted);font-size:.8rem" th:text="${entry.card.typeLine}">Type</td>
                 <td class="mana-cost" th:text="${entry.card.manaCost}"></td>
@@ -224,6 +229,7 @@ SB: 3 Relic of Progenitus</pre>
             <tr>
                 <th style="width:44px"></th>
                 <th>Card</th>
+                <th>Set</th>
                 <th>Type</th>
                 <th>Cost</th>
                 <th>Qty</th>
@@ -244,6 +250,10 @@ SB: 3 Relic of Progenitus</pre>
                     <span th:text="${entry.card.name}">Name</span>
                     <span th:if="${ownedScryfallIds.contains(entry.card.scryfallId())}"
                           class="owned-badge" title="En tu colección">&#10003;</span>
+                </td>
+                <td style="font-size:.75rem;color:var(--text-muted)">
+                    <span class="set-code-badge" th:text="${entry.card.setCode()}"></span>
+                    <span th:text="${entry.card.setName()}" style="display:block;font-size:.7rem;color:var(--text-dim)"></span>
                 </td>
                 <td style="color:var(--text-muted);font-size:.8rem" th:text="${entry.card.typeLine}">Type</td>
                 <td class="mana-cost" th:text="${entry.card.manaCost}"></td>
