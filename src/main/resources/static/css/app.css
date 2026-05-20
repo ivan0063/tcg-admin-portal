@@ -561,6 +561,32 @@ details[open] > .import-summary::before { transform: rotate(90deg); }
     vertical-align: middle;
 }
 .collection-table tr:hover td { background: var(--bg-elevated)55; }
+/* ── Deck filters ── */
+.deck-filters {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+    padding: .65rem .9rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+.deck-filter-input  { flex: 1; min-width: 150px; max-width: 210px; }
+.deck-filter-select { min-width: 130px; max-width: 200px; }
+@media (max-width: 560px) {
+    .deck-filter-input, .deck-filter-select { width: 100%; max-width: 100%; min-width: 0; }
+}
+
+.set-code-badge {
+    display: inline-block;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
 .owned-badge {
     display: inline-flex;
     align-items: center;

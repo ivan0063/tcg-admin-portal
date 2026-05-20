@@ -20,22 +20,8 @@ COPY --from=build /build/target/*.jar app.jar
 
 EXPOSE 8080
 
-# ── Database configuration ──────────────────────────────────────
-# Default: H2 in-memory. Override these env vars for PostgreSQL:
-#
-#   DB_URL=jdbc:postgresql://host:5432/tcgdb
-#   DB_USERNAME=tcguser
-#   DB_PASSWORD=secret
-#   DB_DRIVER=org.postgresql.Driver
-#   JPA_DDL_AUTO=update
-#   H2_CONSOLE_ENABLED=false
-# ────────────────────────────────────────────────────────────────
-ENV DB_URL=jdbc:h2:mem:tcgdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-ENV DB_USERNAME=sa
-ENV DB_PASSWORD=
-ENV DB_DRIVER=org.h2.Driver
-ENV JPA_DDL_AUTO=create-drop
-ENV H2_CONSOLE_ENABLED=true
+# Inject DB_URL, DB_USERNAME, DB_PASSWORD, DB_DRIVER, JPA_DDL_AUTO at runtime.
+# Local/dev default: H2 file-based (set in application.yml property placeholders).
 ENV SERVER_PORT=8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
