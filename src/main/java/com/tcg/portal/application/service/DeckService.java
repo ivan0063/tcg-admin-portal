@@ -58,6 +58,15 @@ public class DeckService implements ManageDeckUseCase {
     }
 
     @Override
+    public Deck updateDeck(Long id, String name, String description, DeckFormat format) {
+        Deck deck = getDeck(id);
+        deck.setName(name);
+        deck.setDescription(description);
+        deck.setFormat(format);
+        return deckRepository.save(deck);
+    }
+
+    @Override
     public Deck addCard(Long deckId, String scryfallId, int quantity, boolean sideboard) {
         Deck deck = getDeck(deckId);
         Card card = resolveCard(scryfallId);

@@ -82,6 +82,7 @@ public class DeckController {
         model.addAttribute("query", q);
         model.addAttribute("pageTitle", deck.getName());
 
+        model.addAttribute("formats", DeckFormat.values());
         model.addAttribute("importFailures", deckUseCase.getImportFailures(id));
         model.addAttribute("arenaText", buildArenaText(deck));
         model.addAttribute("collections", collectionUseCase.getAllCollections());
@@ -170,6 +171,17 @@ public class DeckController {
                               RedirectAttributes redirectAttributes) {
         collectionUseCase.addCard(collectionId, scryfallId, quantity, CardCondition.NEAR_MINT, false);
         redirectAttributes.addFlashAttribute("successMessage", "Carta agregada a la colección.");
+        return "redirect:/decks/" + id;
+    }
+
+    @PostMapping("/{id}/update")
+    public String update(@PathVariable Long id,
+                         @RequestParam String name,
+                         @RequestParam(required = false) String description,
+                         @RequestParam DeckFormat format,
+                         RedirectAttributes redirectAttributes) {
+        deckUseCase.updateDeck(id, name, description, format);
+        redirectAttributes.addFlashAttribute("successMessage", "Deck updated!");
         return "redirect:/decks/" + id;
     }
 

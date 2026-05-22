@@ -42,6 +42,7 @@
         </div>
         <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
             <a th:href="@{/decks}" class="btn-ghost">&#8592; Decks</a>
+            <button type="button" class="btn-ghost" onclick="openEditModal()">&#9998; Edit</button>
             <button type="button" class="btn-ghost" onclick="openArenaModal()">&#9876; Arena</button>
             <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post"
                   onsubmit="return confirm('Delete this deck?')">
@@ -462,6 +463,43 @@ SB: 3 Relic of Progenitus</pre>
     </div>
 </div>
 
+<!-- ── Edit Deck Modal ── -->
+<div id="editDeckModal" class="util-overlay" onclick="if(event.target===this)closeEditModal()">
+    <div class="util-dialog" style="max-width:480px">
+        <div class="util-dialog-header">
+            <h3>&#9998; Edit Deck</h3>
+            <button class="util-close" onclick="closeEditModal()" aria-label="Close">&times;</button>
+        </div>
+        <form th:action="@{/decks/{id}/update(id=${deck.id})}" method="post"
+              style="display:flex;flex-direction:column;gap:.85rem">
+            <div>
+                <label class="form-label" for="editName">Deck Name *</label>
+                <input id="editName" name="name" type="text" class="tcg-input"
+                       th:value="${deck.name}" required style="width:100%">
+            </div>
+            <div>
+                <label class="form-label" for="editFormat">Format *</label>
+                <select id="editFormat" name="format" class="tcg-select" style="width:100%">
+                    <option th:each="f : ${formats}"
+                            th:value="${f.name()}"
+                            th:text="${f.label}"
+                            th:selected="${f == deck.format}">Format</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="editDescription">Strategy / Notes</label>
+                <textarea id="editDescription" name="description" class="tcg-textarea"
+                          rows="5" placeholder="Deck strategy, notes..."
+                          th:text="${deck.description}"></textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.25rem">
+                <button type="submit" class="btn-primary-tcg">Save</button>
+                <button type="button" class="btn-ghost" onclick="closeEditModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- ── Arena Export Modal ── -->
 <div id="arenaModal" class="util-overlay" onclick="if(event.target===this)closeArenaModal()">
     <div class="util-dialog">
@@ -514,6 +552,16 @@ function toggleCollSelect(cb) {
     var sel = document.getElementById('importCollSelect');
     sel.disabled = !cb.checked;
     if (!cb.checked) sel.selectedIndex = 0;
+}
+
+/* ── Edit deck modal ── */
+function openEditModal() {
+    document.getElementById('editDeckModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeEditModal() {
+    document.getElementById('editDeckModal').classList.remove('open');
+    document.body.style.overflow = '';
 }
 
 /* ── Arena modal ── */

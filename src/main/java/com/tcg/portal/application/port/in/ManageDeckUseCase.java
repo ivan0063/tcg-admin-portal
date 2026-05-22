@@ -10,6 +10,7 @@ public interface ManageDeckUseCase {
     List<Deck> getAllDecks();
     Deck getDeck(Long id);
     Deck createDeck(String name, String description, DeckFormat format);
+    Deck updateDeck(Long id, String name, String description, DeckFormat format);
     Deck addCard(Long deckId, String scryfallId, int quantity, boolean sideboard);
     Deck removeCard(Long deckId, Long entryId);
     Deck updateEntry(Long deckId, Long entryId, int quantity, boolean sideboard);

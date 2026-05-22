@@ -29,6 +29,10 @@ public class Deck {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public List<DeckEntry> getEntries() { return entries; }
 
+    public void setName(String name) { this.name = name; }
+    public void setDescription(String description) { this.description = description; }
+    public void setFormat(DeckFormat format) { this.format = format; }
+
     public List<DeckEntry> getMainboard() {
         return entries.stream().filter(e -> !e.isSideboard()).toList();
     }
