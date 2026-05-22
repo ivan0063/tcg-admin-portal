@@ -8,10 +8,15 @@ import com.tcg.portal.application.service.ImportJob;
 import com.tcg.portal.application.service.ImportJobStore;
 import com.tcg.portal.domain.model.CardCondition;
 import com.tcg.portal.domain.model.Deck;
+import com.tcg.portal.domain.model.DeckEntry;
 import com.tcg.portal.domain.model.DeckFormat;
 import com.tcg.portal.domain.model.FailedCard;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -183,6 +188,58 @@ public class DeckController {
         deckUseCase.updateDeck(id, name, description, format);
         redirectAttributes.addFlashAttribute("successMessage", "Deck updated!");
         return "redirect:/decks/" + id;
+    }
+
+    @GetMapping("/{id}/export-missing")
+    @ResponseBody
+    public ResponseEntity<byte[]> exportMissing(@PathVariable Long id) {
+        Deck deck = deckUseCase.getDeck(id);
+        Set<String> owned = collectionUseCase.getOwnedScryfallIds();
+        byte[] body = buildMissingMarkdown(deck, owned).getBytes(StandardCharsets.UTF_8);
+        String filename = deck.getName().replaceAll("[^a-zA-Z0-9_-]", "_") + "_missing.md";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.parseMediaType("text/markdown; charset=UTF-8"))
+                .body(body);
+    }
+
+    private static String buildMissingMarkdown(Deck deck, Set<String> owned) {
+        var sb = new StringBuilder();
+        sb.append("# Missing Cards — ").append(deck.getName()).append("\n\n");
+
+        List<DeckEntry> missingMain = deck.getMainboard().stream()
+                .filter(e -> !owned.contains(e.getCard().scryfallId()))
+                .toList();
+        List<DeckEntry> missingSide = deck.getSideboard().stream()
+                .filter(e -> !owned.contains(e.getCard().scryfallId()))
+                .toList();
+
+        if (missingMain.isEmpty() && missingSide.isEmpty()) {
+            sb.append("_You own all cards in this deck!_\n");
+            return sb.toString();
+        }
+
+        if (!missingMain.isEmpty()) {
+            sb.append("## Mainboard\n\n");
+            for (DeckEntry entry : missingMain) {
+                for (int i = 0; i < entry.getQuantity(); i++) {
+                    sb.append("- [ ] ").append(entry.getCard().name()).append("\n");
+                }
+            }
+            sb.append("\n");
+        }
+
+        if (!missingSide.isEmpty()) {
+            sb.append("## Sideboard\n\n");
+            for (DeckEntry entry : missingSide) {
+                for (int i = 0; i < entry.getQuantity(); i++) {
+                    sb.append("- [ ] ").append(entry.getCard().name()).append("\n");
+                }
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString().stripTrailing();
     }
 
     @PostMapping("/{id}/delete")

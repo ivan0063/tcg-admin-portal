@@ -43,6 +43,7 @@
         <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
             <a th:href="@{/decks}" class="btn-ghost">&#8592; Decks</a>
             <button type="button" class="btn-ghost" onclick="openEditModal()">&#9998; Edit</button>
+            <a th:href="@{/decks/{id}/export-missing(id=${deck.id})}" class="btn-ghost">&#128722; Missing</a>
             <button type="button" class="btn-ghost" onclick="openArenaModal()">&#9876; Arena</button>
             <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post"
                   onsubmit="return confirm('Delete this deck?')">
