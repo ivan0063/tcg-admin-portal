@@ -69,15 +69,18 @@
             <div class="stat-label">Total</div>
             <div class="stat-value" th:text="${deck.mainboardCount + deck.sideboardCount}">0</div>
         </div>
-        <div th:if="${deckAllocation != null}" class="stat-card"
-             th:classappend="${deckAllocation.fullyBuildable()} ? 'stat-card-ok' : 'stat-card-warn'">
+        <div th:if="${deckAllocation != null and deckAllocation.fullyBuildable()}" class="stat-card stat-card-ok">
             <div class="stat-label">Can Build</div>
-            <div class="stat-value" style="font-size:1.1rem"
-                 th:text="${deckAllocation.fullyBuildable()} ? '&#10003; Yes' : ('No — ' + deckAllocation.missingCount() + ' missing')">-</div>
+            <div class="stat-value" style="font-size:1.1rem">&#10003; Yes</div>
+        </div>
+        <div th:if="${deckAllocation != null and !deckAllocation.fullyBuildable()}" class="stat-card stat-card-warn">
+            <div class="stat-label">Can Build</div>
+            <div class="stat-value" style="font-size:1rem"
+                 th:text="'No — ' + ${deckAllocation.missingCount()} + ' missing'">No</div>
         </div>
         <div th:if="${deckAllocation == null}" class="stat-card">
             <div class="stat-label">Can Build</div>
-            <div class="stat-value" style="font-size:1rem;color:var(--text-dim)">—</div>
+            <div class="stat-value" style="font-size:1rem;color:var(--text-dim)">&#8212;</div>
         </div>
     </div>
 
