@@ -46,6 +46,7 @@
             <button type="button" class="btn-ghost"
                     th:attr="data-deck-id=${deck.id}"
                     onclick="openMissingModal(this.dataset.deckId)">&#128722; Missing</button>
+            <button type="button" id="exportPdfBtn" class="btn-ghost" onclick="startPdfExport()">&#128196; PDF</button>
             <button type="button" class="btn-ghost" onclick="openArenaModal()">&#9876; Arena</button>
             <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post"
                   onsubmit="return confirm('Delete this deck?')">
@@ -55,7 +56,7 @@
     </div>
 
     <!-- Stats -->
-    <div class="stats-grid stats-grid-3">
+    <div class="stats-grid stats-grid-4">
         <div class="stat-card">
             <div class="stat-label">Mainboard</div>
             <div class="stat-value" th:text="${deck.mainboardCount}">0</div>
@@ -67,6 +68,16 @@
         <div class="stat-card">
             <div class="stat-label">Total</div>
             <div class="stat-value" th:text="${deck.mainboardCount + deck.sideboardCount}">0</div>
+        </div>
+        <div th:if="${deckAllocation != null}" class="stat-card"
+             th:classappend="${deckAllocation.fullyBuildable()} ? 'stat-card-ok' : 'stat-card-warn'">
+            <div class="stat-label">Can Build</div>
+            <div class="stat-value" style="font-size:1.1rem"
+                 th:text="${deckAllocation.fullyBuildable()} ? '&#10003; Yes' : ('No — ' + deckAllocation.missingCount() + ' missing')">-</div>
+        </div>
+        <div th:if="${deckAllocation == null}" class="stat-card">
+            <div class="stat-label">Can Build</div>
+            <div class="stat-value" style="font-size:1rem;color:var(--text-dim)">—</div>
         </div>
     </div>
 
@@ -213,7 +224,16 @@ SB: 3 Relic of Progenitus</pre>
                 </td>
                 <td style="font-weight:600;font-size:.875rem">
                     <span th:text="${entry.card.name}">Name</span>
-                    <span th:if="${ownedScryfallIds.contains(entry.card.scryfallId())}"
+                    <th:block th:if="${deckAllocation != null}"
+                              th:with="alloc=${deckAllocation.getAllocated(entry.card.scryfallId())},needed=${entry.quantity}">
+                        <span th:if="${alloc >= needed}" class="alloc-inline alloc-inline-ok"
+                              th:text="${alloc} + '/' + ${needed}">2/2</span>
+                        <span th:if="${alloc > 0 and alloc < needed}" class="alloc-inline alloc-inline-partial"
+                              th:text="${alloc} + '/' + ${needed}">1/2</span>
+                        <span th:if="${alloc == 0}" class="alloc-inline alloc-inline-none"
+                              th:text="'0/' + ${needed}">0/2</span>
+                    </th:block>
+                    <span th:if="${deckAllocation == null and ownedScryfallIds.contains(entry.card.scryfallId())}"
                           class="owned-badge" title="En tu colección">&#10003;</span>
                 </td>
                 <td style="font-size:.75rem;color:var(--text-muted)">
@@ -281,7 +301,16 @@ SB: 3 Relic of Progenitus</pre>
                 </td>
                 <td style="font-weight:600;font-size:.875rem">
                     <span th:text="${entry.card.name}">Name</span>
-                    <span th:if="${ownedScryfallIds.contains(entry.card.scryfallId())}"
+                    <th:block th:if="${deckAllocation != null}"
+                              th:with="alloc=${deckAllocation.getAllocated(entry.card.scryfallId())},needed=${entry.quantity}">
+                        <span th:if="${alloc >= needed}" class="alloc-inline alloc-inline-ok"
+                              th:text="${alloc} + '/' + ${needed}">2/2</span>
+                        <span th:if="${alloc > 0 and alloc < needed}" class="alloc-inline alloc-inline-partial"
+                              th:text="${alloc} + '/' + ${needed}">1/2</span>
+                        <span th:if="${alloc == 0}" class="alloc-inline alloc-inline-none"
+                              th:text="'0/' + ${needed}">0/2</span>
+                    </th:block>
+                    <span th:if="${deckAllocation == null and ownedScryfallIds.contains(entry.card.scryfallId())}"
                           class="owned-badge" title="En tu colección">&#10003;</span>
                 </td>
                 <td style="font-size:.75rem;color:var(--text-muted)">
@@ -427,6 +456,57 @@ SB: 3 Relic of Progenitus</pre>
     }
 
     check();
+}());
+</script>
+<script>
+/* ── PDF export ── */
+(function () {
+    var deckId = document.getElementById('importToast').dataset.deckId;
+    var pdfBtn = document.getElementById('exportPdfBtn');
+    var pdfTimer = null;
+
+    function stopPdf() { if (pdfTimer) { clearInterval(pdfTimer); pdfTimer = null; } }
+
+    function pollPdf() {
+        fetch('/decks/' + deckId + '/export-pdf/status')
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.state === 'PENDING') {
+                    if (!pdfTimer) pdfTimer = setInterval(pollPdf, 1000);
+                } else if (d.state === 'DONE') {
+                    stopPdf();
+                    pdfBtn.textContent = '📄 PDF';
+                    pdfBtn.disabled = false;
+                    var a = document.createElement('a');
+                    a.href = '/decks/' + deckId + '/export-pdf/download';
+                    a.download = '';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } else if (d.state === 'ERROR') {
+                    stopPdf();
+                    pdfBtn.textContent = '📄 PDF';
+                    pdfBtn.disabled = false;
+                    alert('PDF export failed: ' + (d.error || 'unknown error'));
+                } else {
+                    stopPdf();
+                }
+            })
+            .catch(function() { stopPdf(); pdfBtn.textContent = '📄 PDF'; pdfBtn.disabled = false; });
+    }
+
+    window.startPdfExport = function() {
+        pdfBtn.textContent = '⏳ Generating…';
+        pdfBtn.disabled = true;
+        fetch('/decks/' + deckId + '/export-pdf/generate', { method: 'POST' })
+            .then(function() {
+                pdfTimer = setInterval(pollPdf, 1000);
+            })
+            .catch(function() {
+                pdfBtn.textContent = '📄 PDF';
+                pdfBtn.disabled = false;
+            });
+    };
 }());
 </script>
 <!-- ── Add to Collection Modal ── -->

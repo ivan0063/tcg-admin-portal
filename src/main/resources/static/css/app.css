@@ -264,6 +264,21 @@ body {
     margin-bottom: 1.5rem;
 }
 
+/* ===== 4-COLUMN STAT GRID VARIANT ===== */
+.stats-grid.stats-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 660px;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card-ok {
+    border-color: #16a34a;
+}
+
+.stat-card-warn {
+    border-color: #d97706;
+}
+
 /* ===== TABLE SCROLL WRAPPER ===== */
 .table-scroll {
     background: var(--bg-surface);
@@ -603,6 +618,33 @@ details[open] > .import-summary::before { transform: rotate(90deg); }
     flex-shrink: 0;
 }
 
+/* ===== ALLOCATION INLINE BADGES ===== */
+.alloc-inline {
+    display: inline-block;
+    font-size: .65rem;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: .35rem;
+    vertical-align: middle;
+    letter-spacing: .02em;
+}
+.alloc-inline-ok      { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.alloc-inline-partial { background: #fef9c3; color: #92400e; border: 1px solid #fde68a; }
+.alloc-inline-none    { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+/* ===== ALLOCATION DECK-LIST BADGES ===== */
+.alloc-badge {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 600;
+    border-radius: 5px;
+    padding: 2px 8px;
+    letter-spacing: .02em;
+}
+.alloc-badge-ok      { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.alloc-badge-missing { background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; }
+
 .thumb {
     width: 36px;
     height: 50px;
@@ -876,6 +918,7 @@ details[open] > .import-summary::before { transform: rotate(90deg); }
 /* iPad mini portrait (768 px) — unlock the 3-col stat grid max-width */
 @media (max-width: 768px) {
     .stats-grid.stats-grid-3 { max-width: none; }
+    .stats-grid.stats-grid-4 { grid-template-columns: repeat(2, 1fr); max-width: none; }
 }
 
 /* Tablet / large phone (≤ 640 px) */
@@ -890,6 +933,7 @@ details[open] > .import-summary::before { transform: rotate(90deg); }
     .list-row .list-row-body { flex: 1 0 100%; }
     .list-row .list-row-meta { min-width: 0; text-align: left; flex: 1; }
     .stats-grid.stats-grid-3 { grid-template-columns: 1fr 1fr; max-width: none; }
+    .stats-grid.stats-grid-4 { grid-template-columns: 1fr 1fr; max-width: none; }
 }
 
 /* iPhone / small phone (≤ 430 px) */
