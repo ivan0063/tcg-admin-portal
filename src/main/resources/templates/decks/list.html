@@ -42,11 +42,11 @@
                     <span th:if="${d.sideboardCount > 0}" style="color:var(--text-dim)">&middot; <span th:text="${d.sideboardCount}">0</span> side</span>
                 </div>
                 <div th:if="${deckAllocations != null and deckAllocations[d.id] != null}" style="margin-top:.25rem">
-                    <span th:with="alloc=${deckAllocations[d.id]}"
-                          th:classappend="${alloc.fullyBuildable()} ? 'alloc-badge-ok' : 'alloc-badge-missing'"
-                          class="alloc-badge"
-                          th:text="${alloc.fullyBuildable()} ? '&#10003; Buildable' : ('Missing ' + alloc.missingCount())">
-                    </span>
+                    <th:block th:with="alloc=${deckAllocations[d.id]}">
+                        <span th:if="${alloc.fullyBuildable()}" class="alloc-badge alloc-badge-ok">&#10003; Buildable</span>
+                        <span th:unless="${alloc.fullyBuildable()}" class="alloc-badge alloc-badge-missing"
+                              th:text="'Missing ' + ${alloc.missingCount()}">Missing N</span>
+                    </th:block>
                 </div>
             </div>
             <div class="list-row-actions">
