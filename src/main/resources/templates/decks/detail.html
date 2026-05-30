@@ -43,7 +43,9 @@
         <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
             <a th:href="@{/decks}" class="btn-ghost">&#8592; Decks</a>
             <button type="button" class="btn-ghost" onclick="openEditModal()">&#9998; Edit</button>
-            <a th:href="@{/decks/{id}/export-missing(id=${deck.id})}" class="btn-ghost">&#128722; Missing</a>
+            <button type="button" class="btn-ghost"
+                    th:attr="data-deck-id=${deck.id}"
+                    onclick="openMissingModal(this.dataset.deckId)">&#128722; Missing</button>
             <button type="button" id="exportPdfBtn" class="btn-ghost" onclick="startPdfExport()">&#128196; PDF</button>
             <button type="button" class="btn-ghost" onclick="openArenaModal()">&#9876; Arena</button>
             <form th:action="@{/decks/{id}/delete(id=${deck.id})}" method="post"
@@ -544,6 +546,22 @@ SB: 3 Relic of Progenitus</pre>
     </div>
 </div>
 
+<!-- ── Missing Cards Modal ── -->
+<div id="missingModal" class="util-overlay" onclick="if(event.target===this)closeMissingModal()">
+    <div class="util-dialog">
+        <div class="util-dialog-header">
+            <h3>&#128722; Missing Cards</h3>
+            <button class="util-close" onclick="closeMissingModal()" aria-label="Cerrar">&times;</button>
+        </div>
+        <p id="missingModalStatus" style="font-size:.82rem;color:var(--text-muted);margin:0 0 .75rem"></p>
+        <textarea id="missingTextarea" class="util-textarea" rows="18" readonly></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:.75rem">
+            <button id="copyMissingBtn" type="button" class="btn-primary-tcg" onclick="copyMissingText()">&#128203; Copy</button>
+            <button type="button" class="btn-ghost" onclick="closeMissingModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- ── Edit Deck Modal ── -->
 <div id="editDeckModal" class="util-overlay" onclick="if(event.target===this)closeEditModal()">
     <div class="util-dialog" style="max-width:480px">
@@ -633,6 +651,46 @@ function toggleCollSelect(cb) {
     var sel = document.getElementById('importCollSelect');
     sel.disabled = !cb.checked;
     if (!cb.checked) sel.selectedIndex = 0;
+}
+
+/* ── Missing cards modal ── */
+function openMissingModal(deckId) {
+    var modal   = document.getElementById('missingModal');
+    var ta      = document.getElementById('missingTextarea');
+    var status  = document.getElementById('missingModalStatus');
+    var copyBtn = document.getElementById('copyMissingBtn');
+    ta.value = '';
+    status.textContent = 'Loading…';
+    copyBtn.disabled = true;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    fetch('/decks/' + deckId + '/export-missing')
+        .then(function (r) { return r.text(); })
+        .then(function (text) {
+            ta.value = text;
+            copyBtn.disabled = false;
+            var lines = text.split('\n').filter(function (l) { return l.startsWith('- [ ]'); }).length;
+            status.textContent = lines > 0
+                ? lines + ' card(s) to purchase — copied to clipboard'
+                : 'You own all cards in this deck!';
+            return navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.resolve();
+        })
+        .catch(function () {
+            status.textContent = 'Could not load missing cards.';
+        });
+}
+function closeMissingModal() {
+    document.getElementById('missingModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+function copyMissingText() {
+    var ta  = document.getElementById('missingTextarea');
+    var btn = document.getElementById('copyMissingBtn');
+    navigator.clipboard.writeText(ta.value).then(function () {
+        btn.textContent = '✓ Copied!';
+        setTimeout(function () { btn.textContent = '📋 Copy'; }, 2000);
+    });
 }
 
 /* ── Edit deck modal ── */
