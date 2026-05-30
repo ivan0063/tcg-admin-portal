@@ -1,13 +1,18 @@
 package com.tcg.portal.infrastructure.web;
 
 import com.tcg.portal.application.port.in.CardSearchUseCase;
+import com.tcg.portal.application.port.in.DeckAllocationUseCase;
 import com.tcg.portal.application.port.in.ManageCollectionUseCase;
 import com.tcg.portal.application.port.in.ManageDeckUseCase;
 import com.tcg.portal.application.service.AsyncImportService;
+import com.tcg.portal.application.service.AsyncPdfExportService;
 import com.tcg.portal.application.service.ImportJob;
 import com.tcg.portal.application.service.ImportJobStore;
+import com.tcg.portal.application.service.PdfExportJob;
+import com.tcg.portal.application.service.PdfExportJobStore;
 import com.tcg.portal.domain.model.CardCondition;
 import com.tcg.portal.domain.model.Deck;
+import com.tcg.portal.domain.model.DeckAllocationResult;
 import com.tcg.portal.domain.model.DeckEntry;
 import com.tcg.portal.domain.model.DeckFormat;
 import com.tcg.portal.domain.model.FailedCard;
@@ -16,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,22 +37,32 @@ public class DeckController {
     private final AsyncImportService asyncImportService;
     private final ImportJobStore importJobStore;
     private final ManageCollectionUseCase collectionUseCase;
+    private final DeckAllocationUseCase allocationUseCase;
+    private final AsyncPdfExportService asyncPdfExportService;
+    private final PdfExportJobStore pdfJobStore;
 
     public DeckController(ManageDeckUseCase deckUseCase,
                           CardSearchUseCase cardSearchUseCase,
                           AsyncImportService asyncImportService,
                           ImportJobStore importJobStore,
-                          ManageCollectionUseCase collectionUseCase) {
+                          ManageCollectionUseCase collectionUseCase,
+                          DeckAllocationUseCase allocationUseCase,
+                          AsyncPdfExportService asyncPdfExportService,
+                          PdfExportJobStore pdfJobStore) {
         this.deckUseCase = deckUseCase;
         this.cardSearchUseCase = cardSearchUseCase;
         this.asyncImportService = asyncImportService;
         this.importJobStore = importJobStore;
         this.collectionUseCase = collectionUseCase;
+        this.allocationUseCase = allocationUseCase;
+        this.asyncPdfExportService = asyncPdfExportService;
+        this.pdfJobStore = pdfJobStore;
     }
 
     @GetMapping
     public String list(Model model) {
         model.addAttribute("decks", deckUseCase.getAllDecks());
+        model.addAttribute("deckAllocations", allocationUseCase.allocateAll());
         model.addAttribute("pageTitle", "My Decks");
         return "decks/list";
     }
@@ -92,6 +108,7 @@ public class DeckController {
         model.addAttribute("arenaText", buildArenaText(deck));
         model.addAttribute("collections", collectionUseCase.getAllCollections());
         model.addAttribute("ownedScryfallIds", collectionUseCase.getOwnedScryfallIds());
+        model.addAttribute("deckAllocation", allocationUseCase.allocateForDeck(id));
 
         if (q != null && !q.isBlank()) {
             model.addAttribute("searchResults", cardSearchUseCase.searchCards(q));
@@ -240,6 +257,34 @@ public class DeckController {
         }
 
         return sb.toString().stripTrailing();
+    }
+
+    @PostMapping("/{id}/export-pdf/generate")
+    @ResponseBody
+    public Map<String, String> generatePdf(@PathVariable Long id) {
+        asyncPdfExportService.generatePdf(id);
+        return Map.of("status", "PENDING");
+    }
+
+    @GetMapping(value = "/{id}/export-pdf/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public PdfExportJob pdfStatus(@PathVariable Long id) {
+        return pdfJobStore.pollStatus(id);
+    }
+
+    @GetMapping("/{id}/export-pdf/download")
+    @ResponseBody
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) {
+        PdfExportJob job = pdfJobStore.getAndRemove(id);
+        if (job == null || job.pdfBytes() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Deck deck = deckUseCase.getDeck(id);
+        String filename = deck.getName().replaceAll("[^a-zA-Z0-9_-]", "_") + ".pdf";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(job.pdfBytes());
     }
 
     @PostMapping("/{id}/delete")
