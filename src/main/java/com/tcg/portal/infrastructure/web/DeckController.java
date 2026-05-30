@@ -11,10 +11,7 @@ import com.tcg.portal.domain.model.Deck;
 import com.tcg.portal.domain.model.DeckEntry;
 import com.tcg.portal.domain.model.DeckFormat;
 import com.tcg.portal.domain.model.FailedCard;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Controller;
@@ -190,17 +187,12 @@ public class DeckController {
         return "redirect:/decks/" + id;
     }
 
-    @GetMapping("/{id}/export-missing")
+    @GetMapping(value = "/{id}/export-missing", produces = "text/plain;charset=UTF-8")
     @ResponseBody
-    public ResponseEntity<byte[]> exportMissing(@PathVariable Long id) {
+    public String exportMissing(@PathVariable Long id) {
         Deck deck = deckUseCase.getDeck(id);
         Set<String> owned = collectionUseCase.getOwnedScryfallIds();
-        byte[] body = buildMissingMarkdown(deck, owned).getBytes(StandardCharsets.UTF_8);
-        String filename = deck.getName().replaceAll("[^a-zA-Z0-9_-]", "_") + "_missing.md";
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .contentType(MediaType.parseMediaType("text/markdown; charset=UTF-8"))
-                .body(body);
+        return buildMissingMarkdown(deck, owned);
     }
 
     private static String buildMissingMarkdown(Deck deck, Set<String> owned) {
