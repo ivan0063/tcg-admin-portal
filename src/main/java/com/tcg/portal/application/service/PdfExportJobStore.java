@@ -21,14 +21,10 @@ public class PdfExportJobStore {
         jobs.put(deckId, PdfExportJob.error(message));
     }
 
-    /** Returns current status; removes DONE/ERROR after first poll. */
+    /** Returns current status without removing the job. */
     public PdfExportJob pollStatus(Long deckId) {
         PdfExportJob job = jobs.get(deckId);
-        if (job == null) return PdfExportJob.IDLE;
-        if (job.state() == PdfExportJob.State.DONE || job.state() == PdfExportJob.State.ERROR) {
-            jobs.remove(deckId);
-        }
-        return job;
+        return job != null ? job : PdfExportJob.IDLE;
     }
 
     /** Retrieves PDF bytes without removing the job — used by the download endpoint. */
