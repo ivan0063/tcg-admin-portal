@@ -8,7 +8,7 @@ public record DeckAllocationResult(
         int totalRequired,
         int totalAllocated
 ) {
-    public boolean isFullyBuildable() {
+    public boolean fullyBuildable() {
         return totalAllocated >= totalRequired;
     }
 
