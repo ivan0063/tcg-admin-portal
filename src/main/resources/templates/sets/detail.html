@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${set.name} + ' — TCG Portal'">Set</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <style>
+        .set-detail-header { display: flex; align-items: center; gap: .75rem; }
+        .set-icon-lg { width: 40px; height: 40px; object-fit: contain; filter: invert(1) opacity(.8); flex-shrink: 0; }
+        .set-type-badge {
+            font-size: .7rem;
+            padding: .2rem .5rem;
+            border-radius: 4px;
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            text-transform: capitalize;
+        }
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            justify-content: center;
+            padding: 1rem 0;
+        }
+        .page-label { font-size: .85rem; color: var(--text-muted); }
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-link .tcg-card { height: 100%; }
+        .collector-num {
+            font-size: .68rem;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="page-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <div class="set-detail-header">
+                <img th:if="${set.iconSvgUri != null}" class="set-icon-lg"
+                     th:src="${set.iconSvgUri}" th:alt="${set.name}">
+                <h1 class="page-title" th:text="${set.name}">Set Name</h1>
+                <span class="set-type-badge" th:text="${set.setType}">expansion</span>
+            </div>
+            <p class="page-subtitle">
+                <span th:if="${set.releasedAt != null}" th:text="${#temporals.format(set.releasedAt, 'MMMM d, yyyy')} + ' · '">Jan 1, 2024 · </span>
+                <span th:text="${set.cardCount} + ' cards'">250 cards</span>
+            </p>
+        </div>
+        <a th:href="@{/sets}" class="btn-ghost">&#8592; Sets</a>
+    </div>
+
+    <!-- Pagination (top) -->
+    <div class="pagination" th:if="${hasMore or currentPage > 1}">
+        <a th:if="${currentPage > 1}"
+           th:href="@{/sets/{code}(code=${set.code},page=${currentPage - 1})}"
+           class="btn-ghost">&#8592; Prev</a>
+        <span class="page-label" th:text="'Page ' + ${currentPage}">Page 1</span>
+        <a th:if="${hasMore}"
+           th:href="@{/sets/{code}(code=${set.code},page=${currentPage + 1})}"
+           class="btn-ghost">Next &#8594;</a>
+    </div>
+
+    <!-- Card grid -->
+    <div class="card-grid" th:if="${not #lists.isEmpty(cards)}">
+        <a th:each="card : ${cards}"
+           th:href="@{/sets/{code}/cards/{id}(code=${set.code},id=${card.scryfallId()})}"
+           class="card-link">
+            <div class="tcg-card">
+                <img th:if="${card.imageUri != null}"
+                     th:src="${card.imageUri}"
+                     th:alt="${card.name}"
+                     loading="lazy">
+                <div th:if="${card.imageUri == null}" class="card-placeholder">&#9670;</div>
+                <div class="card-body">
+                    <div class="card-name" th:text="${card.name}">Card Name</div>
+                    <div class="mana-cost" th:text="${card.manaCost}"></div>
+                    <div th:if="${card.collectorNumber != null}" class="collector-num"
+                         th:text="'#' + ${card.collectorNumber}"></div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(cards)}">
+        <div class="empty-icon">&#9670;</div>
+        <p style="color:var(--text-muted)">No cards found for this set.</p>
+    </div>
+
+    <!-- Pagination (bottom) -->
+    <div class="pagination" th:if="${hasMore or currentPage > 1}">
+        <a th:if="${currentPage > 1}"
+           th:href="@{/sets/{code}(code=${set.code},page=${currentPage - 1})}"
+           class="btn-ghost">&#8592; Prev</a>
+        <span class="page-label" th:text="'Page ' + ${currentPage}">Page 1</span>
+        <a th:if="${hasMore}"
+           th:href="@{/sets/{code}(code=${set.code},page=${currentPage + 1})}"
+           class="btn-ghost">Next &#8594;</a>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

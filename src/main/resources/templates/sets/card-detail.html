@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${card.name} + ' — TCG Portal'">Card</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <style>
+        .card-detail-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        @media (max-width: 720px) {
+            .card-detail-layout { grid-template-columns: 1fr; }
+            .card-art img { max-width: 340px; margin: 0 auto; display: block; }
+        }
+        .card-art img {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .card-info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .card-oracle {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            font-size: .9rem;
+            line-height: 1.6;
+            color: var(--text);
+            white-space: pre-line;
+        }
+        .detail-row {
+            display: flex;
+            gap: .5rem;
+            align-items: baseline;
+            font-size: .875rem;
+        }
+        .detail-label {
+            color: var(--text-muted);
+            min-width: 90px;
+            flex-shrink: 0;
+        }
+        .action-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+        }
+        .action-panel h3 {
+            font-size: .95rem;
+            font-weight: 600;
+            margin: 0 0 .85rem;
+            color: var(--text);
+        }
+        .action-form-row {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .action-field { display: flex; flex-direction: column; gap: .3rem; }
+        .action-field label { font-size: .75rem; color: var(--text-muted); }
+        .qty-input {
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            padding: .45rem .6rem;
+            font-size: .85rem;
+            width: 64px;
+        }
+        .qty-input:focus { outline: none; border-color: var(--primary); }
+        .foil-row { display: flex; align-items: center; gap: .4rem; font-size: .82rem; color: var(--text-muted); margin-top: .2rem; }
+        .foil-row input { accent-color: var(--primary); }
+        .rarity-common   { background: #374151; color: #9ca3af; }
+        .rarity-uncommon { background: #1e3a5f; color: #94a3b8; }
+        .rarity-rare     { background: #422006; color: #fbbf24; }
+        .rarity-mythic   { background: #431407; color: #f97316; }
+        .alert-success {
+            background: #14532d;
+            border: 1px solid #16a34a;
+            color: #86efac;
+            border-radius: 8px;
+            padding: .75rem 1rem;
+            margin-bottom: 1.25rem;
+            font-size: .9rem;
+        }
+        .price-block { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+        .price-item { display: flex; flex-direction: column; gap: .15rem; }
+        .price-item .price-label { font-size: .72rem; color: var(--text-muted); }
+        .price-item .price-val { font-size: 1rem; font-weight: 700; color: var(--accent); }
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="page-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${card.name}">Card Name</h1>
+            <div style="display:flex;align-items:center;gap:.75rem;margin-top:.4rem;flex-wrap:wrap">
+                <span class="mana-cost" style="font-size:.95rem" th:text="${card.manaCost}"></span>
+                <span class="badge-rarity"
+                      th:classappend="'rarity-' + ${card.rarity}"
+                      th:text="${card.rarity}">rare</span>
+                <span style="font-size:.82rem;color:var(--text-muted)" th:text="${card.setName}">Set Name</span>
+            </div>
+        </div>
+        <a th:href="@{/sets/{code}(code=${set.code})}" class="btn-ghost">
+            &#8592; <span th:text="${set.name}">Set</span>
+        </a>
+    </div>
+
+    <!-- Flash message -->
+    <div class="alert-success" th:if="${param.added != null}"
+         th:text="${param.added[0] == 'collection' ? 'Card added to collection!' : 'Card added to deck!'}">
+    </div>
+
+    <div class="card-detail-layout">
+        <!-- Left: art -->
+        <div class="card-art">
+            <img th:if="${card.imageUri != null}"
+                 th:src="${card.imageUri}"
+                 th:alt="${card.name}">
+            <div th:if="${card.imageUri == null}"
+                 style="width:100%;aspect-ratio:63/88;background:var(--bg-elevated);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--text-dim)">
+                &#9670;
+            </div>
+        </div>
+
+        <!-- Right: details + actions -->
+        <div class="card-info-panel">
+
+            <!-- Type & oracle -->
+            <div>
+                <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem" th:text="${card.typeLine}">Type</div>
+                <div class="card-oracle" th:text="${card.oracleText}"></div>
+            </div>
+
+            <!-- Detail rows -->
+            <div style="display:flex;flex-direction:column;gap:.4rem">
+                <div class="detail-row" th:if="${card.setCode != null}">
+                    <span class="detail-label">Set</span>
+                    <span th:text="${card.setName} + ' (' + ${card.setCode?.toUpperCase()} + ')'"></span>
+                </div>
+                <div class="detail-row" th:if="${card.collectorNumber != null}">
+                    <span class="detail-label">Number</span>
+                    <span th:text="${card.collectorNumber}"></span>
+                </div>
+                <div class="detail-row" th:if="${not #lists.isEmpty(card.colorIdentity)}">
+                    <span class="detail-label">Color ID</span>
+                    <span th:text="${#strings.arrayJoin(card.colorIdentity.toArray(), ', ')}"></span>
+                </div>
+            </div>
+
+            <!-- Pricing -->
+            <div class="price-block" th:if="${card.usdPrice != null or card.usdFoilPrice != null}">
+                <div class="price-item" th:if="${card.usdPrice != null}">
+                    <span class="price-label">Normal</span>
+                    <span class="price-val" th:text="'$' + ${card.usdPrice}"></span>
+                </div>
+                <div class="price-item" th:if="${card.usdFoilPrice != null}">
+                    <span class="price-label">Foil</span>
+                    <span class="price-val" th:text="'$' + ${card.usdFoilPrice}"></span>
+                </div>
+            </div>
+
+            <!-- Add to Collection -->
+            <div class="action-panel" th:if="${not #lists.isEmpty(collections)}">
+                <h3>&#128218; Add to Collection</h3>
+                <form th:action="@{/sets/{sc}/cards/{id}/collect(sc=${set.code},id=${card.scryfallId()})}"
+                      method="post">
+                    <div class="action-form-row">
+                        <div class="action-field" style="flex:1;min-width:150px">
+                            <label>Collection</label>
+                            <select name="collectionId" class="tcg-select">
+                                <option th:each="col : ${collections}"
+                                        th:value="${col.id}"
+                                        th:text="${col.name}">My Collection</option>
+                            </select>
+                        </div>
+                        <div class="action-field">
+                            <label>Qty</label>
+                            <input type="number" name="quantity" value="1" min="1" class="qty-input">
+                        </div>
+                        <div class="action-field" style="min-width:130px">
+                            <label>Condition</label>
+                            <select name="condition" class="tcg-select">
+                                <option th:each="cond : ${conditions}"
+                                        th:value="${cond.name()}"
+                                        th:text="${cond.label}"
+                                        th:selected="${cond.name() == 'NEAR_MINT'}">Near Mint</option>
+                            </select>
+                        </div>
+                        <div class="action-field" style="justify-content:flex-end">
+                            <button type="submit" class="btn-primary-tcg">+ Add</button>
+                        </div>
+                    </div>
+                    <div class="foil-row" style="margin-top:.6rem">
+                        <input type="checkbox" name="foil" value="true" id="foilCheck">
+                        <label for="foilCheck">Foil copy</label>
+                    </div>
+                </form>
+            </div>
+
+            <div class="action-panel" th:if="${#lists.isEmpty(collections)}"
+                 style="border-color:var(--text-dim)">
+                <p style="color:var(--text-muted);font-size:.875rem;margin:0">
+                    No collections yet.
+                    <a th:href="@{/collections/new}" style="color:var(--primary)">Create one</a> to track this card.
+                </p>
+            </div>
+
+            <!-- Add to Deck -->
+            <div class="action-panel" th:if="${not #lists.isEmpty(decks)}">
+                <h3>&#9876; Add to Deck</h3>
+                <form th:action="@{/sets/{sc}/cards/{id}/deck(sc=${set.code},id=${card.scryfallId()})}"
+                      method="post">
+                    <div class="action-form-row">
+                        <div class="action-field" style="flex:1;min-width:150px">
+                            <label>Deck</label>
+                            <select name="deckId" class="tcg-select">
+                                <option th:each="deck : ${decks}"
+                                        th:value="${deck.id}"
+                                        th:text="${deck.name}">My Deck</option>
+                            </select>
+                        </div>
+                        <div class="action-field">
+                            <label>Qty</label>
+                            <input type="number" name="quantity" value="1" min="1" class="qty-input">
+                        </div>
+                        <div class="action-field" style="justify-content:flex-end">
+                            <button type="submit" class="btn-primary-tcg">+ Add</button>
+                        </div>
+                    </div>
+                    <div class="foil-row" style="margin-top:.6rem">
+                        <input type="checkbox" name="sideboard" value="true" id="sideboardCheck">
+                        <label for="sideboardCheck">Add to sideboard</label>
+                    </div>
+                </form>
+            </div>
+
+            <div class="action-panel" th:if="${#lists.isEmpty(decks)}"
+                 style="border-color:var(--text-dim)">
+                <p style="color:var(--text-muted);font-size:.875rem;margin:0">
+                    No decks yet.
+                    <a th:href="@{/decks/new}" style="color:var(--primary)">Create one</a> to add this card.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

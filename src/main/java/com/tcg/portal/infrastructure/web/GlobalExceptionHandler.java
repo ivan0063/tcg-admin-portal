@@ -3,6 +3,7 @@ package com.tcg.portal.infrastructure.web;
 import com.tcg.portal.domain.exception.CardNotFoundException;
 import com.tcg.portal.domain.exception.CollectionNotFoundException;
 import com.tcg.portal.domain.exception.DeckNotFoundException;
+import com.tcg.portal.domain.exception.SetNotFoundException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({CollectionNotFoundException.class, DeckNotFoundException.class, CardNotFoundException.class})
+    @ExceptionHandler({CollectionNotFoundException.class, DeckNotFoundException.class, CardNotFoundException.class, SetNotFoundException.class})
     public String handleNotFound(RuntimeException ex, Model model) {
         model.addAttribute("errorTitle", "Not Found");
         model.addAttribute("errorMessage", ex.getMessage());
