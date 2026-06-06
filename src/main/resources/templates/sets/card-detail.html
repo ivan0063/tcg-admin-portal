@@ -77,12 +77,12 @@
             width: 64px;
         }
         .qty-input:focus { outline: none; border-color: var(--primary); }
-        .foil-row { display: flex; align-items: center; gap: .4rem; font-size: .82rem; color: var(--text-muted); margin-top: .2rem; }
+        .foil-row { display: flex; align-items: center; gap: .4rem; font-size: .82rem; color: var(--text-muted); margin-top: .5rem; }
         .foil-row input { accent-color: var(--primary); }
-        .rarity-common   { background: #374151; color: #9ca3af; }
-        .rarity-uncommon { background: #1e3a5f; color: #94a3b8; }
-        .rarity-rare     { background: #422006; color: #fbbf24; }
-        .rarity-mythic   { background: #431407; color: #f97316; }
+        .price-block { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+        .price-item { display: flex; flex-direction: column; gap: .15rem; }
+        .price-item .price-label { font-size: .72rem; color: var(--text-muted); }
+        .price-item .price-val { font-size: 1rem; font-weight: 700; color: var(--accent); }
         .alert-success {
             background: #14532d;
             border: 1px solid #16a34a;
@@ -92,10 +92,6 @@
             margin-bottom: 1.25rem;
             font-size: .9rem;
         }
-        .price-block { display: flex; gap: 1.25rem; flex-wrap: wrap; }
-        .price-item { display: flex; flex-direction: column; gap: .15rem; }
-        .price-item .price-label { font-size: .72rem; color: var(--text-muted); }
-        .price-item .price-val { font-size: 1rem; font-weight: 700; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -109,7 +105,7 @@
             <div style="display:flex;align-items:center;gap:.75rem;margin-top:.4rem;flex-wrap:wrap">
                 <span class="mana-cost" style="font-size:.95rem" th:text="${card.manaCost}"></span>
                 <span class="badge-rarity"
-                      th:classappend="'rarity-' + ${card.rarity}"
+                      th:classappend="${'rarity-' + card.rarity}"
                       th:text="${card.rarity}">rare</span>
                 <span style="font-size:.82rem;color:var(--text-muted)" th:text="${card.setName}">Set Name</span>
             </div>
@@ -120,8 +116,8 @@
     </div>
 
     <!-- Flash message -->
-    <div class="alert-success" th:if="${param.added != null}"
-         th:text="${param.added[0] == 'collection' ? 'Card added to collection!' : 'Card added to deck!'}">
+    <div class="alert-success" th:if="${param.added != null}">
+        <span th:text="${param.added[0] == 'collection' ? 'Card added to collection!' : 'Card added to deck!'}"></span>
     </div>
 
     <div class="card-detail-layout">
@@ -141,7 +137,8 @@
 
             <!-- Type & oracle -->
             <div>
-                <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem" th:text="${card.typeLine}">Type</div>
+                <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem"
+                     th:text="${card.typeLine}">Type</div>
                 <div class="card-oracle" th:text="${card.oracleText}"></div>
             </div>
 
@@ -157,7 +154,7 @@
                 </div>
                 <div class="detail-row" th:if="${not #lists.isEmpty(card.colorIdentity)}">
                     <span class="detail-label">Color ID</span>
-                    <span th:text="${#strings.arrayJoin(card.colorIdentity.toArray(), ', ')}"></span>
+                    <span th:text="${#strings.listJoin(card.colorIdentity, ', ')}"></span>
                 </div>
             </div>
 
@@ -204,7 +201,7 @@
                             <button type="submit" class="btn-primary-tcg">+ Add</button>
                         </div>
                     </div>
-                    <div class="foil-row" style="margin-top:.6rem">
+                    <div class="foil-row">
                         <input type="checkbox" name="foil" value="true" id="foilCheck">
                         <label for="foilCheck">Foil copy</label>
                     </div>
@@ -241,7 +238,7 @@
                             <button type="submit" class="btn-primary-tcg">+ Add</button>
                         </div>
                     </div>
-                    <div class="foil-row" style="margin-top:.6rem">
+                    <div class="foil-row">
                         <input type="checkbox" name="sideboard" value="true" id="sideboardCheck">
                         <label for="sideboardCheck">Add to sideboard</label>
                     </div>

@@ -59,9 +59,9 @@
         <div>
             <h1 class="page-title">&#9680; Browse Sets</h1>
             <p class="page-subtitle"
-               th:text="${#lists.size(sets)} + ' set(s)' + (selectedType != null and !selectedType.isEmpty() ? ' · filtered by ' + selectedType : '')"></p>
+               th:text="${#lists.size(sets)} + ' set(s)' + (selectedType != null ? ' · ' + selectedType : '')"></p>
         </div>
-        <a th:href="@{/sets}" class="btn-ghost" th:if="${selectedType != null and !selectedType.isEmpty()}">
+        <a th:href="@{/sets}" class="btn-ghost" th:if="${selectedType != null}">
             &#10005; Clear filter
         </a>
     </div>
@@ -71,7 +71,7 @@
         <label for="typeFilter">Filter by type:</label>
         <form method="get" action="/sets" style="display:contents">
             <select id="typeFilter" name="type" class="tcg-select" onchange="this.form.submit()">
-                <option value="" th:selected="${selectedType == null or selectedType.isEmpty()}">All types</option>
+                <option value="" th:selected="${selectedType == null}">All types</option>
                 <option th:each="t : ${setTypes}"
                         th:value="${t}"
                         th:text="${t}"
@@ -91,8 +91,8 @@
                 <span class="set-name" th:text="${s.name}">Set Name</span>
             </div>
             <div class="set-meta">
-                <span th:if="${s.releasedAt != null}"
-                      th:text="${#temporals.format(s.releasedAt, 'MMM yyyy')}">Jan 2024</span>
+                <span th:if="${not #strings.isEmpty(s.releasedAtShort())}"
+                      th:text="${s.releasedAtShort()}">Jan 2024</span>
                 <span th:text="${s.cardCount} + ' cards'">250 cards</span>
                 <span class="set-type-badge" th:text="${s.setType}">expansion</span>
             </div>

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -55,7 +54,6 @@ public class SetController {
         model.addAttribute("sets", displayed);
         model.addAttribute("setTypes", setTypes);
         model.addAttribute("selectedType", type);
-        model.addAttribute("currentUri", "/sets");
         return "sets/list";
     }
 
@@ -70,7 +68,6 @@ public class SetController {
         model.addAttribute("cards", cardPage.cards());
         model.addAttribute("hasMore", cardPage.hasMore());
         model.addAttribute("currentPage", page);
-        model.addAttribute("currentUri", "/sets");
         return "sets/detail";
     }
 
@@ -86,7 +83,6 @@ public class SetController {
         model.addAttribute("collections", collectionUseCase.getAllCollections());
         model.addAttribute("decks", deckUseCase.getAllDecks());
         model.addAttribute("conditions", CardCondition.values());
-        model.addAttribute("currentUri", "/sets");
         return "sets/card-detail";
     }
 
