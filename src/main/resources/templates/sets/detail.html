@@ -52,7 +52,8 @@
                 <span class="set-type-badge" th:text="${set.setType}">expansion</span>
             </div>
             <p class="page-subtitle">
-                <span th:if="${set.releasedAt != null}" th:text="${#temporals.format(set.releasedAt, 'MMMM d, yyyy')} + ' · '">Jan 1, 2024 · </span>
+                <span th:if="${not #strings.isEmpty(set.releasedAtFull())}"
+                      th:text="${set.releasedAtFull()} + ' · '"></span>
                 <span th:text="${set.cardCount} + ' cards'">250 cards</span>
             </p>
         </div>
