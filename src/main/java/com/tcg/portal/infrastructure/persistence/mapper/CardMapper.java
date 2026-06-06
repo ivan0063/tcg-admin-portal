@@ -26,7 +26,8 @@ public final class CardMapper {
                 e.getImageUri(),
                 e.getSmallImageUri(),
                 e.getUsdPrice(),
-                e.getUsdFoilPrice()
+                e.getUsdFoilPrice(),
+                null
         );
     }
 

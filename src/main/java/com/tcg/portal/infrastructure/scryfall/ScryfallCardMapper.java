@@ -28,7 +28,8 @@ public class ScryfallCardMapper {
                 resolveImageUri(dto, "normal"),
                 resolveImageUri(dto, "small"),
                 parsePrice(dto.prices() != null ? dto.prices().usd() : null),
-                parsePrice(dto.prices() != null ? dto.prices().usdFoil() : null)
+                parsePrice(dto.prices() != null ? dto.prices().usdFoil() : null),
+                dto.collectorNumber()
         );
     }
 

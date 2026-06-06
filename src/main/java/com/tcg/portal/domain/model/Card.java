@@ -18,7 +18,8 @@ public record Card(
         String imageUri,
         String smallImageUri,
         BigDecimal usdPrice,
-        BigDecimal usdFoilPrice
+        BigDecimal usdFoilPrice,
+        String collectorNumber
 ) {
     public String displayPrice() {
         if (usdPrice != null) return "$" + usdPrice.toPlainString();
