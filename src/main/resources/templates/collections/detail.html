@@ -17,9 +17,8 @@
             <h1 class="page-title" th:text="${collection.name}">Collection Name</h1>
             <p class="page-subtitle" th:text="${collection.description}"></p>
         </div>
-        <div style="display:flex;gap:.5rem;align-items:center">
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
             <a th:href="@{/collections}" class="btn-ghost">&#8592; Collections</a>
-            <a th:href="@{/collections/{id}/export-pdf(id=${collection.id})}" class="btn-ghost">&#128196; Export PDF</a>
             <form th:action="@{/collections/{id}/delete(id=${collection.id})}" method="post"
                   onsubmit="return confirm('Delete this entire collection?')">
                 <button type="submit" class="btn-danger-tcg">&#128465; Delete</button>
@@ -42,6 +41,15 @@
             <div class="stat-value" style="font-size:1.35rem"
                  th:text="'$' + ${#numbers.formatDecimal(collection.totalValue,1,2)}">$0</div>
         </div>
+    </div>
+
+    <!-- Export PDF -->
+    <div style="margin-bottom:1.25rem">
+        <a th:href="@{/collections/{id}/export-pdf(id=${collection.id})}"
+           class="btn-primary-tcg"
+           style="width:100%;justify-content:center;padding:.65rem 1rem;font-size:.9rem">
+            &#128196; Export Collection as PDF
+        </a>
     </div>
 
     <!-- Flash -->
