@@ -19,7 +19,9 @@ public record Card(
         String smallImageUri,
         BigDecimal usdPrice,
         BigDecimal usdFoilPrice,
-        String collectorNumber
+        String collectorNumber,
+        String power,
+        String toughness
 ) {
     public String displayPrice() {
         if (usdPrice != null) return "$" + usdPrice.toPlainString();
@@ -28,5 +30,10 @@ public record Card(
 
     public String manaCostDisplay() {
         return manaCost != null ? manaCost : "";
+    }
+
+    public String powerToughness() {
+        if (power == null || toughness == null) return null;
+        return power + "/" + toughness;
     }
 }

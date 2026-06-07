@@ -2,7 +2,12 @@ package com.tcg.portal.infrastructure.web;
 
 import com.tcg.portal.application.port.in.CardSearchUseCase;
 import com.tcg.portal.application.port.in.ManageCollectionUseCase;
+import com.tcg.portal.application.service.CollectionPdfExportService;
 import com.tcg.portal.domain.model.CardCondition;
+import com.tcg.portal.domain.model.Collection;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,11 +19,14 @@ public class CollectionController {
 
     private final ManageCollectionUseCase collectionUseCase;
     private final CardSearchUseCase cardSearchUseCase;
+    private final CollectionPdfExportService pdfExportService;
 
     public CollectionController(ManageCollectionUseCase collectionUseCase,
-                                CardSearchUseCase cardSearchUseCase) {
+                                CardSearchUseCase cardSearchUseCase,
+                                CollectionPdfExportService pdfExportService) {
         this.collectionUseCase = collectionUseCase;
         this.cardSearchUseCase = cardSearchUseCase;
+        this.pdfExportService = pdfExportService;
     }
 
     @GetMapping
@@ -86,6 +94,18 @@ public class CollectionController {
                                  RedirectAttributes redirectAttributes) {
         collectionUseCase.updateItemQuantity(id, itemId, quantity);
         return "redirect:/collections/" + id;
+    }
+
+    @GetMapping("/{id}/export-pdf")
+    @ResponseBody
+    public ResponseEntity<byte[]> exportPdf(@PathVariable Long id) {
+        Collection collection = collectionUseCase.getCollection(id);
+        byte[] pdf = pdfExportService.exportCollection(collection);
+        String filename = collection.getName().replaceAll("[^a-zA-Z0-9_-]", "_") + "-collection.pdf";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
     @PostMapping("/{id}/delete")
