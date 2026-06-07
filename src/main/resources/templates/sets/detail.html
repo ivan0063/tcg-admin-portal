@@ -60,6 +60,15 @@
         <a th:href="@{/sets}" class="btn-ghost">&#8592; Sets</a>
     </div>
 
+    <!-- Export PDF -->
+    <div style="margin-bottom:1.25rem">
+        <a th:href="@{/sets/{code}/export-pdf(code=${set.code})}"
+           class="btn-primary-tcg"
+           style="width:100%;justify-content:center;padding:.65rem 1rem;font-size:.9rem">
+            &#128196; Export Full Set as PDF (for LLM context)
+        </a>
+    </div>
+
     <!-- Pagination (top) -->
     <div class="pagination" th:if="${hasMore or currentPage > 1}">
         <a th:if="${currentPage > 1}"
