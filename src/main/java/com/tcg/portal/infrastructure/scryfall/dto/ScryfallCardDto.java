@@ -20,5 +20,7 @@ public record ScryfallCardDto(
         @JsonProperty("image_uris") Map<String, String> imageUris,
         @JsonProperty("card_faces") List<ScryfallCardFaceDto> cardFaces,
         ScryfallPricesDto prices,
-        @JsonProperty("collector_number") String collectorNumber
+        @JsonProperty("collector_number") String collectorNumber,
+        String power,
+        String toughness
 ) {}

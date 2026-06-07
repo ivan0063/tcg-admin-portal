@@ -19,6 +19,7 @@
         </div>
         <div style="display:flex;gap:.5rem;align-items:center">
             <a th:href="@{/collections}" class="btn-ghost">&#8592; Collections</a>
+            <a th:href="@{/collections/{id}/export-pdf(id=${collection.id})}" class="btn-ghost">&#128196; Export PDF</a>
             <form th:action="@{/collections/{id}/delete(id=${collection.id})}" method="post"
                   onsubmit="return confirm('Delete this entire collection?')">
                 <button type="submit" class="btn-danger-tcg">&#128465; Delete</button>
