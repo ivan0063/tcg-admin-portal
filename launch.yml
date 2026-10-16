@@ -11,12 +11,16 @@ env:
 
 environments:
 
-  # The preview declares no database on purpose: the app falls back to its
-  # file-based H2 default, so it is self-contained and never sees prod data.
+  # The app does not actually run against an empty H2 database, so the preview
+  # gets its own empty PostgreSQL database instead: tcg_db_preview, separate
+  # from tcg_db. A preview still never sees production data.
   preview:
     env:
-      H2_CONSOLE_ENABLED: "true"
+      H2_CONSOLE_ENABLED: "false"
       LOG_LEVEL: DEBUG
+    secrets:
+      - path: preview/tcg-admin-portal
+        format: env
 
   prod:
     branches: [main]
