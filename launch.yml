@@ -1,0 +1,29 @@
+# launch.yml - tcg-admin-portal
+profile: spring-boot
+app: tcg-admin-portal
+
+# Defaults
+port: 8080
+host: tcg                        # tcg.lab.home.arpa once local DNS exists
+env:
+  TZ: America/Mexico_City
+  JPA_DDL_AUTO: update
+
+environments:
+
+  # The preview declares no database on purpose: the app falls back to its
+  # file-based H2 default, so it is self-contained and never sees prod data.
+  preview:
+    env:
+      H2_CONSOLE_ENABLED: "true"
+      LOG_LEVEL: DEBUG
+
+  prod:
+    branches: [main]
+    env:
+      H2_CONSOLE_ENABLED: "false"   # the app leaves it on by default
+    secrets:
+      # Only the path. DB_URL, DB_USERNAME and DB_PASSWORD live in OpenBao and
+      # reach the pod as env vars through External Secrets Operator.
+      - path: prod/tcg-admin-portal
+        format: env
