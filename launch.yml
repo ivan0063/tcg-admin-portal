@@ -1,0 +1,27 @@
+# launch.yml — tcg-admin-portal
+profile: spring-boot
+app: tcg-admin-portal
+
+# Defaults
+port: 8080
+host: tcg                        # tcg.lab.home.arpa cuando exista DNS local
+env:
+  TZ: America/Mexico_City
+  JPA_DDL_AUTO: update
+
+environments:
+
+  # El preview no declara base de datos: la app cae a su default de H2 en archivo.
+  # Autocontenido, sin secretos y sin tocar tcg_db. Un preview nunca ve datos de prod.
+  preview:
+    env:
+      H2_CONSOLE_ENABLED: "true"   # útil para inspeccionar el preview
+      LOG_LEVEL: DEBUG
+
+  prod:
+    branches: [main]
+    env:
+      H2_CONSOLE_ENABLED: "false"  # hoy la app la deja prendida por default
+    # DB_URL, DB_USERNAME y DB_PASSWORD llegan del secreto de Actions
+    # APP_SECRET_ENV_PROD, no de este archivo: contienen la IP interna y la
+    # contraseña. El pipeline los convierte en un Secret de Kubernetes.
