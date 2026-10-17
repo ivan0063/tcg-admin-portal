@@ -13,3 +13,5 @@ environments:
   preview:
     env:
       LOG_LEVEL: DEBUG
+  prod:
+    host-port: 4000              # balthazar.local:4000, the address it had on melchior
