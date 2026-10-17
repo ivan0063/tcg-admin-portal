@@ -3,6 +3,8 @@
 # prod from main and OpenBao secrets at <environment>/tcg-admin-portal.
 profile: spring-boot
 host: tcg                        # tcg.lab.home.arpa once local DNS exists
+# The MTGJSON index built at startup needs more than the 512Mi default.
+memory: 1Gi
 env:
   JPA_DDL_AUTO: update
   H2_CONSOLE_ENABLED: "false"    # the app leaves it on by default
