@@ -1,33 +1,13 @@
 # launch.yml - tcg-admin-portal
+# Only what differs from the pipeline convention: app name, port 8080, TZ,
+# prod from main and OpenBao secrets at <environment>/tcg-admin-portal.
 profile: spring-boot
-app: tcg-admin-portal
-
-# Defaults
-port: 8080
 host: tcg                        # tcg.lab.home.arpa once local DNS exists
 env:
-  TZ: America/Mexico_City
   JPA_DDL_AUTO: update
+  H2_CONSOLE_ENABLED: "false"    # the app leaves it on by default
 
 environments:
-
-  # The app does not actually run against an empty H2 database, so the preview
-  # gets its own empty PostgreSQL database instead: tcg_db_preview, separate
-  # from tcg_db. A preview still never sees production data.
   preview:
     env:
-      H2_CONSOLE_ENABLED: "false"
       LOG_LEVEL: DEBUG
-    secrets:
-      - path: preview/tcg-admin-portal
-        format: env
-
-  prod:
-    branches: [main]
-    env:
-      H2_CONSOLE_ENABLED: "false"   # the app leaves it on by default
-    secrets:
-      # Only the path. DB_URL, DB_USERNAME and DB_PASSWORD live in OpenBao and
-      # reach the pod as env vars through External Secrets Operator.
-      - path: prod/tcg-admin-portal
-        format: env
